@@ -35,7 +35,7 @@ class JobboleSpider(scrapy.Spider):
             yield Request(url=parse.urljoin(response.url, next_url), callback=self.parse)
 
     def parse_detail(self, response):
-        article_item = JobBoleArticleItem()
+        # article_item = JobBoleArticleItem()
 
         #提取文章的具体字段
         # title = response.xpath('//div[@class="entry-header"]/h1/text()').extract_first("")
