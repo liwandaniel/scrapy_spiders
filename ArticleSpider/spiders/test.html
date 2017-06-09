@@ -1,0 +1,1417 @@
+
+<!DOCTYPE html>
+<!--[if lt IE 7 ]> <html lang="en" class="no-js ie6"> <![endif]-->
+<!--[if IE 7 ]> <html lang="en" class="no-js ie7"> <![endif]-->
+<!--[if IE 8 ]> <html lang="en" class="no-js ie8"> <![endif]-->
+<!--[if IE 9 ]> <html lang="en" class="no-js ie9"> <![endif]-->
+<!--[if (gt IE 9)|!(IE)]><!--> <html lang="zh-CN" prefix="og: http://ogp.me/ns#" class="no-js"> <!--<![endif]-->
+
+
+<!-- BEGIN head -->
+<head>
+
+	<!-- Title -->
+	<title>如何构建一个分布式爬虫：基础篇 - Python - 伯乐在线</title>
+
+	<!-- Meta Tags -->
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+	<!-- Favicon & Mobileicon -->
+	<link rel="shortcut icon" href="http://python.jobbole.com/wp-content/uploads/sites/13/2014/12/favicon.png" />
+	<link rel="apple-touch-icon" href="http://python.jobbole.com/wp-content/themes/jobboleblogv3/mobileicon.png" />
+
+	<!-- RSS, Atom & Pingbacks -->
+		<link rel="alternate" title="Python &#8211; 伯乐在线 RSS Feed" href="http://python.jobbole.com/feed/" />
+		<link rel="alternate" title="RSS .92" href="http://python.jobbole.com/feed/rss/" />
+	<link rel="alternate" title="Atom 0.3" href="http://python.jobbole.com/feed/atom/" />
+	<link rel="pingback" href="http://python.jobbole.com/xmlrpc.php" />
+
+	<!-- Theme Hook -->
+
+<!-- This site is optimized with the Yoast WordPress SEO plugin v1.4.13 - http://yoast.com/wordpress/seo/ -->
+<meta name="description" content="继上篇我们谈论了Celery的基本知识后，本篇继续讲解如何一步步使用Celery构建分布式爬虫。"/>
+<link rel="canonical" href="http://python.jobbole.com/87826/" />
+<meta property='og:locale' content='zh_CN'/>
+<meta property='og:type' content='article'/>
+<meta property='og:title' content='如何构建一个分布式爬虫：基础篇 - Python - 伯乐在线'/>
+<meta property='og:description' content='继上篇我们谈论了Celery的基本知识后，本篇继续讲解如何一步步使用Celery构建分布式爬虫。'/>
+<meta property='og:url' content='http://python.jobbole.com/87826/'/>
+<meta property='og:site_name' content='Python - 伯乐在线'/>
+<meta property='og:image' content='http://upload-images.jianshu.io/upload_images/1514374-90168064efa1794c.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240'/>
+<meta property='og:image' content='http://upload-images.jianshu.io/upload_images/1514374-67f8267a09301ab0.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240'/>
+<meta property='og:image' content='http://upload-images.jianshu.io/upload_images/1514374-518be598768fab09.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240'/>
+<!-- / Yoast WordPress SEO plugin. -->
+
+<link rel='stylesheet' id='dashicons-css'  href='http://python.jobbole.com/wp-includes/css/dashicons.min.css?ver=4.5.7' type='text/css' media='all' />
+<link rel='stylesheet' id='thickbox-css'  href='http://python.jobbole.com/wp-includes/js/thickbox/thickbox.css?ver=4.5.7' type='text/css' media='all' />
+<link rel='stylesheet' id='fancybox-css-css'  href='http://python.jobbole.com/wp-content/plugins/jobbole-wp-plugin/css/jquery.fancybox.css?ver=2.1.5' type='text/css' media='all' />
+<link rel='stylesheet' id='jobbole-wp-css-css'  href='http://python.jobbole.com/wp-content/plugins/jobbole-wp-plugin/css/jobbole-wp-plugin.css?ver=1.0.30' type='text/css' media='all' />
+<link rel='stylesheet' id='crayon_colorbox_css-css'  href='http://python.jobbole.com/wp-content/plugins/crayon-syntax-highlighter/util/tag-editor/colorbox/colorbox.css?ver=2.7.1.1' type='text/css' media='all' />
+<link rel='stylesheet' id='crayon_style-css'  href='http://python.jobbole.com/wp-content/plugins/crayon-syntax-highlighter/css/src/crayon_style.css?ver=2.7.1.1' type='text/css' media='all' />
+<link rel='stylesheet' id='crayon_global_style-css'  href='http://python.jobbole.com/wp-content/plugins/crayon-syntax-highlighter/css/src/global_style.css?ver=2.7.1.1' type='text/css' media='all' />
+<link rel='stylesheet' id='crayon-theme-github-css'  href='http://python.jobbole.com/wp-content/plugins/crayon-syntax-highlighter/themes/github/github.css?ver=2.7.1.1' type='text/css' media='all' />
+<link rel='stylesheet' id='crayon-font-monaco-css'  href='http://python.jobbole.com/wp-content/plugins/crayon-syntax-highlighter/fonts/monaco.css?ver=2.7.1.1' type='text/css' media='all' />
+<link rel='stylesheet' id='v48fv_images-css'  href='http://python.jobbole.com/wp-content/plugins/mu-widgets/library/base/public/css/images.css?ver=1.2.v48fv' type='text/css' media='all' />
+<link rel='stylesheet' id='v48fv_front-css'  href='http://python.jobbole.com/wp-content/plugins/mu-widgets/library/base/public/css/front.css?ver=1.2.v48fv' type='text/css' media='all' />
+<link rel='stylesheet' id='v48fv_common-css'  href='http://python.jobbole.com/wp-content/plugins/mu-widgets/library/base/public/css/common.css?ver=1.2.v48fv' type='text/css' media='all' />
+<script type='text/javascript' src='http://python.jobbole.com/wp-includes/js/jquery/jquery.js?ver=1.12.4'></script>
+<script type='text/javascript' src='http://python.jobbole.com/wp-includes/js/jquery/jquery-migrate.min.js?ver=1.4.1'></script>
+<script type='text/javascript' src='http://python.jobbole.com/wp-content/plugins/jobbole-wp-plugin/js/jquery.fancybox.pack.js?ver=2.1.5'></script>
+<script type='text/javascript' src='http://python.jobbole.com/wp-content/plugins/jobbole-wp-plugin/js/superfish.js?ver=1.4.8'></script>
+<script type='text/javascript' src='http://python.jobbole.com/wp-content/plugins/jobbole-wp-plugin/js/menu-effects.js?ver=1.5.1'></script>
+<script type='text/javascript'>
+/* <![CDATA[ */
+var JobboleAjax = {"ajaxurl":"http:\/\/python.jobbole.com\/wp-admin\/admin-ajax.php"};
+/* ]]> */
+</script>
+<script type='text/javascript' src='http://python.jobbole.com/wp-content/plugins/jobbole-wp-plugin/js/jobbole-wp-plugin.js?ver=1.0.61'></script>
+<script type='text/javascript' src='http://python.jobbole.com/wp-content/plugins/crayon-syntax-highlighter/util/tag-editor/colorbox/jquery.colorbox-min.js?ver=2.7.1.1'></script>
+<script type='text/javascript'>
+/* <![CDATA[ */
+var CrayonSyntaxSettings = {"version":"2.7.1.1","is_admin":"0","ajaxurl":"http:\/\/python.jobbole.com\/wp-admin\/admin-ajax.php","prefix":"crayon-","setting":"crayon-setting","selected":"crayon-setting-selected","changed":"crayon-setting-changed","special":"crayon-setting-special","orig_value":"data-orig-value","debug":""};
+var CrayonSyntaxStrings = {"copy":"\u4f7f\u7528 %s \u590d\u5236\uff0c\u4f7f\u7528 %s \u7c98\u8d34\u3002","minimize":"\u70b9\u51fb\u5c55\u5f00\u4ee3\u7801"};
+/* ]]> */
+</script>
+<script type='text/javascript' src='http://python.jobbole.com/wp-content/plugins/crayon-syntax-highlighter/js/src/util.js?ver=2.7.1.1'></script>
+<script type='text/javascript'>
+/* <![CDATA[ */
+var CrayonTagEditorSettings = {"home_url":"http:\/\/python.jobbole.com","css":"crayon-te","css_selected":"crayon-selected","code_css":"#crayon-code","url_css":"#crayon-url","url_info_css":"#crayon-te-url-info","lang_css":"#crayon-lang","title_css":"#crayon-title","mark_css":"#crayon-mark","range_css":"#crayon-range","inline_css":"crayon-inline","inline_hide_css":"crayon-hide-inline","inline_hide_only_css":"crayon-hide-inline-only","hl_css":"#crayon-highlight","switch_html":"#content-html","switch_tmce":"#content-tmce","tinymce_button_generic":".mce-btn","tinymce_button":"a.mce_crayon_tinymce,.mce-i-crayon_tinymce","tinymce_button_unique":"mce_crayon_tinymce","tinymce_highlight":"mce-active","submit_css":"#crayon-te-ok","cancel_css":"#crayon-te-cancel","content_css":"#crayon-te-content","dialog_title_css":"#crayon-te-title","submit_wrapper_css":"#crayon-te-submit-wrapper","data_value":"data-value","attr_sep":":","css_sep":"_","fallback_lang":"python","add_text":"Add Code","edit_text":"Edit Code","quicktag_text":"crayon","submit_add":"\u63d2\u5165","submit_edit":"\u4fdd\u5b58","bar":"#crayon-te-bar","bar_content":"#crayon-te-bar-content","extensions":{"scpt":"applescript","applescript":"applescript","swf":"as","fla":"as","cs":"c#","h":"c++","hh":"c++","hpp":"c++","hxx":"c++","h++":"c++","cc":"c++","cpp":"c++","cxx":"c++","c++":"c++","pas":"delphi","java":"java","class":"java","jar":"java","mv":"miva","mvc":"miva","mvt":"miva","m":"objc","mm":"objc","psc":"papyrus","pl":"perl","py":"python","pyw":"python","pyc":"python","pyo":"python","pyd":"python","rb":"ruby","rbx":"ruby","rhtml":"ruby","vbs":"vb"}};
+/* ]]> */
+</script>
+<script type='text/javascript' src='http://python.jobbole.com/wp-content/plugins/crayon-syntax-highlighter/util/tag-editor/crayon_tag_editor.js?ver=2.7.1.1'></script>
+<script type='text/javascript' src='http://python.jobbole.com/wp-content/plugins/crayon-syntax-highlighter/js/src/jquery.popup.js?ver=2.7.1.1'></script>
+<script type='text/javascript' src='http://python.jobbole.com/wp-content/plugins/crayon-syntax-highlighter/js/src/crayon.js?ver=2.7.1.1'></script>
+<script type='text/javascript' src='http://python.jobbole.com/wp-content/themes/jobboleblogv3/_assets/js/modernizr.js?ver=2.5.3'></script>
+<link rel='https://api.w.org/' href='http://python.jobbole.com/wp-json/' />
+<link rel="EditURI" type="application/rsd+xml" title="RSD" href="http://python.jobbole.com/xmlrpc.php?rsd" />
+<link rel="wlwmanifest" type="application/wlwmanifest+xml" href="http://python.jobbole.com/wp-includes/wlwmanifest.xml" />
+<link rel='shortlink' href='http://python.jobbole.com/?p=87826' />
+<link rel="alternate" type="application/json+oembed" href="http://python.jobbole.com/wp-json/oembed/1.0/embed?url=http%3A%2F%2Fpython.jobbole.com%2F87826%2F" />
+<link rel="alternate" type="text/xml+oembed" href="http://python.jobbole.com/wp-json/oembed/1.0/embed?url=http%3A%2F%2Fpython.jobbole.com%2F87826%2F&#038;format=xml" />
+    <script type="text/javascript">
+        jQuery(function($){
+            $('.comment-reply-link').click(function(e){
+                e.preventDefault();
+                var args = $(this).data('onclick');
+                args = args.replace(/.*\(|\)/gi, '').replace(/\"|\s+/g, '');
+                args = args.split(',');
+                tinymce.EditorManager.execCommand('mceRemoveEditor', true, 'comment_editor');
+                addComment.moveForm.apply( addComment, args );
+                tinymce.EditorManager.execCommand('mceAddEditor', true, 'comment_editor');
+            });
+
+            $('#cancel-comment-reply-link').click(function(e){
+                e.preventDefault();
+                tinymce.EditorManager.execCommand('mceRemoveEditor', true, 'comment_editor');
+                tinymce.EditorManager.execCommand('mceAddEditor', true, 'comment_editor');
+            });
+        });
+    </script>
+
+	<!-- CSS -->
+    <link rel="stylesheet" type="text/css" media="screen" href="http://python.jobbole.com/wp-content/themes/jobboleblogv3/style.css?ver=1.0.66">
+	<style>
+				*::selection { background: #0099cc; }
+		*::-moz-selection { background: #0099cc; }
+		body {
+            background: #ffffff         }
+
+        a,
+        .tabs ul.nav li a:hover,
+        .tabs ul.nav li.active a,
+        .dropcap,
+        .toggle.hover .toggle-title,
+        li.comment cite a:hover,
+        h3.widget-title,
+        .post-meta .meta-title:hover,
+        .the-latest a:hover h4,
+        .aw_socialcounter_widget li a:hover,
+        .aw_tabbed_widget #tab-latest-comments a:hover
+        {
+            color: #0099cc;
+        }
+
+		a:hover { color: #b30000; }
+		input:focus, textarea:focus { border-color: #0099cc; }
+
+		#searchsubmit,
+        .highlight,
+        .aw_tabbed_widget .tabs ul.nav li.active a, footer .aw_tabbed_widget .tabs ul.nav li.active a,
+        #top .aw_tabbed_widget .tabs ul.nav li.active a,
+        .aw_tabbed_widget .tabs ul.nav li a:hover,
+        footer .aw_tabbed_widget .tabs ul.nav li a:hover,
+        #top .aw_tabbed_widget .tabs ul.nav li a:hover,
+        .aw_twitter_widget .twitter-icon, .testimonial-icon,
+        #top-closed:hover,
+        .flex-control-nav a:hover,
+        .flex-control-nav a.flex-active {
+            background-color: #0099cc;
+        }
+
+		.submit { background-color: #0099cc; border-color: #007399; }
+		.submit:hover { background-color: #b30000; border-color: #860000; }
+		#searchsubmit:hover { background-color: #b30000; }
+		.toggle.hover .toggle-icon { border-top-color: #0099cc; }
+		.toggle.hover.active .toggle-icon { border-bottom-color: #0099cc; }
+		.flex-direction-nav li .flex-prev:hover { border-right-color: #0099cc; }
+		.flex-direction-nav li .flex-next:hover { border-left-color: #0099cc; }
+		@media only screen and (min-width: 768px) and (max-width: 959px) {
+			.aw_tabbed_widget .tabs ul.nav li a:hover, .tabs ul.nav li.active a { color: #0099cc; }
+		}
+		@media screen and (max-width: 767px) {
+			.tabs ul.nav li a:hover, .tabs ul.nav li.active a { color: #0099cc; }
+		}
+	</style>
+
+	<!--[if IE 8]>
+		<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+		<script src="http://ie7-js.googlecode.com/svn/version/2.1(beta4)/IE9.js"></script>
+    <![endif]-->
+
+	<!-- Links: RSS + Atom Syndication + Pingback etc. -->
+	<link rel="alternate" type="application/rss+xml" title="Python &#8211; 伯乐在线 RSS Feed" href="http://python.jobbole.com/feed/" />
+	<link rel="alternate" type="text/xml" title="RSS .92" href="http://python.jobbole.com/feed/rss/" />
+	<link rel="alternate" type="application/atom+xml" title="Atom 0.3" href="http://python.jobbole.com/feed/atom/" />
+	<link rel="pingback" href="http://python.jobbole.com/xmlrpc.php" />
+
+<!-- END head -->
+</head>
+
+<!-- BEGIN body -->
+<body class="single single-post postid-87826 single-format-standard unknown">
+
+
+	    <nav id="top-nav" class="menu-nav">
+
+        <!-- BEGIN .container -->
+        <div class="container">
+
+            <div class="grid-7 hide-on-480 hide-on-767">
+                <ul id="menu-main-menu" class="menu left">
+                    <li class="menu-item">
+                        <a href="http://www.jobbole.com">首页</a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="http://top.jobbole.com">资讯</a>
+                    </li>
+                    <li class="menu-item">
+                        <span><a href="http://blog.jobbole.com">文章 <i class="fa fa-angle-double-down"></i></a></span>
+                        <ul class="sub-menu sf-js-enabled">
+                            <li class="menu-item"><a href="http://blog.jobbole.com">全部文章</a></li>
+                            <li class="menu-item"><a href="http://web.jobbole.com">Web前端</a></li>
+                            <li class="menu-item"><a href="http://python.jobbole.com">Python开发</a></li>
+                            <li class="menu-item"><a href="http://www.importnew.com/?utm_source=home-top-nav">Java技术</a></li>
+                            <li class="menu-item"><a href="http://android.jobbole.com">Android应用</a></li>
+                            <li class="menu-item"><a href="http://ios.jobbole.com">iOS应用</a></li>
+                        </ul>
+                    </li>
+                    <li class="menu-item">
+                        <a href="http://hao.jobbole.com">资源</a>
+                    </li>
+
+                    <li class="menu-item">
+                        <a href="http://group.jobbole.com">小组</a>
+                    </li>
+
+                    <li class="menu-item">
+                        <a href="http://date.jobbole.com"><i class="fa fa-heart-o pinkiconcolor"></i> 相亲</a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="grid-5">
+                <ul id="menu-main-menu" class="menu">
+                    <li class="menu-item hide-on-768-wider left">
+                        <span><a href="#">频道 <i class="fa fa-angle-double-down"></i></a></span>
+                        <ul class="sub-menu sf-js-enabled">
+                            <li class="menu-item"><a href="http://www.jobbole.com">首页</a></li>
+                            <li class="menu-item"><a href="http://top.jobbole.com">资讯</a></li>
+                            <li class="menu-item"><a href="http://group.jobbole.com">小组</a></li>
+                            <li class="menu-item"><a href="http://date.jobbole.com">相亲 <i class="fa fa-heart-o pinkiconcolor"></i></a></li>
+                            <li class="menu-item"><a href="http://hao.jobbole.com">资源</a></li>
+                            <li class="menu-item"><a href="http://blog.jobbole.com">全部文章</a></li>
+                            <li class="menu-item"><a href="http://web.jobbole.com">前端</a></li>
+                            <li class="menu-item"><a href="http://python.jobbole.com">Python</a></li>
+                            <li class="menu-item"><a href="http://www.importnew.com/">Java</a></li>
+                            <li class="menu-item"><a href="http://android.jobbole.com">安卓</a></li>
+                            <li class="menu-item"><a href="http://ios.jobbole.com">iOS</a></li>
+                        </ul>
+                    </li>
+
+                                            <li class="menu-item"><a href="http://www.jobbole.com/login?redirect=http%3A%2F%2Fpython.jobbole.com%2F87826%2F"><i class="fa fa-sign-in"></i> 登录</a></li>
+                        <li class="menu-item"><a href="http://www.jobbole.com/register"><i class="fa fa-user-plus"></i> 注册</a></li>
+
+
+                    <li class="menu-item"><a title="帮助" href="http://blog.jobbole.com/87622/"><i class="fa fa-question-circle fa-lg"></i></a></li>
+                </ul>
+            </div>
+            <div class="clear"></div>
+
+        </div>
+        <!-- END .container -->
+
+    </nav>
+    <!-- END #top-nav -->
+
+	<!-- BEGIN #wrapper -->
+	<div id="wrapper" class="container">
+
+		<!-- BEGIN header -->
+		<header>
+
+
+			<div class="header-wrapper">
+
+				<!-- BEGIN #logo -->
+				<div id="logo" class="leaderboard-true">
+                    <a href="http://python.jobbole.com"><img src="http://python.jobbole.com/wp-content/themes/jobboleblogv3/_assets/img/jobbole-logo.png" alt="Python &#8211; 伯乐在线" /></a>
+				</div>
+				<!-- END #logo -->
+
+				<!-- BEGIN #leaderboard -->
+				<div id="leaderboard">
+
+					<a href='http://date.jobbole.com/4164/' target='_blank'><img width='728' height='90' src='http://wx2.sinaimg.cn/mw690/bfdcef89gy1ffimc8bgf3j20k802i3zn.jpg' /></a>
+				</div>
+				<!-- END #leaderboard -->
+
+				<div class="clear"></div>
+
+			</div>
+
+
+			<div class="clear"></div>
+
+            			<!-- BEGIN #main-nav -->
+			<nav id="main-nav" class="grid-12 menu-nav">
+                <div class="menu-sub-menu-container"><ul id="main-nav-menu" class="menu"><li id="menu-item-80741" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-80741"><a href="http://python.jobbole.com/">首页</a></li>
+<li id="menu-item-80740" class="menu-item menu-item-type-post_type menu-item-object-page current_page_parent menu-item-80740"><a href="http://python.jobbole.com/all-posts/">所有文章</a></li>
+<li id="menu-item-83414" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-83414"><a href="http://python.jobbole.com/category/news/">观点与动态</a></li>
+<li id="menu-item-83410" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-83410"><a href="http://python.jobbole.com/category/basic/">基础知识</a></li>
+<li id="menu-item-83411" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-83411"><a href="http://python.jobbole.com/category/guide/">系列教程</a></li>
+<li id="menu-item-83412" class="menu-item menu-item-type-taxonomy menu-item-object-category current-post-ancestor current-menu-parent current-post-parent menu-item-83412"><a href="http://python.jobbole.com/category/project/">实践项目</a></li>
+<li id="menu-item-83413" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-83413"><a href="http://python.jobbole.com/category/tools/">工具与框架</a></li>
+<li id="menu-item-80742" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-80742"><a href="http://hao.jobbole.com/?catid=144">工具资源</a></li>
+<li id="menu-item-85851" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-85851"><a href="http://group.jobbole.com/category/tech/python/">Python小组</a></li>
+</ul></div>				<div class="clear"></div>
+			</nav>
+			<!-- END #main-nav -->
+                        <div class="clear"></div>
+
+		</header>
+		<!-- END header -->
+
+		<div id="breadcrumb" class="grid-12 margin-20"><div class="breadcrumb-wrapper"><!-- Breadcrumb NavXT 4.4.0 -->
+<a title="Go to 伯乐在线." href="http://www.jobbole.com" class="main-home">伯乐在线</a> &gt; <a title="Go to Python - 伯乐在线." href="http://python.jobbole.com" class="home">Python - 伯乐在线</a> &gt; <a title="Go to 所有文章." href="http://python.jobbole.com/all-posts/" class="post-root post-post">所有文章</a> &gt; <a title="Go to the 实践项目 category archives." href="http://python.jobbole.com/category/project/" class="category">实践项目</a> &gt; 如何构建一个分布式爬虫：基础篇</div></div><div class="clear"></div>
+
+<!-- BEGIN .grid-8 -->
+<div class="grid-8">
+
+
+	<!-- BEGIN .post -->
+<div class="post-87826 post type-post status-publish format-standard hentry category-project tag-1510 odd" id="post-87826">
+
+	<!-- BEGIN .entry-header -->
+	<div class="entry-header">
+
+
+		<h1>如何构建一个分布式爬虫：基础篇</h1>
+
+
+	</div>
+	<!-- BEGIN .entry-header -->
+
+	<!-- BEGIN .entry-meta -->
+	<div class="entry-meta">
+
+		<p class="entry-meta-hide-on-mobile">
+
+            2017/06/08 &middot;  <a href="http://python.jobbole.com/category/project/" rel="category tag">实践项目</a>
+
+
+
+
+             &middot;  <a href="http://python.jobbole.com/tag/%e5%88%86%e5%b8%83%e5%bc%8f%e7%88%ac%e8%99%ab/">分布式爬虫</a>
+
+</p>
+
+<!-- JiaThis Button BEGIN -->
+<div class="jiathis_style" style="display: block; margin: 0 0px; clear: both;"><span class="jiathis_txt">分享到：</span>
+<a class="jiathis_button_tsina"></a>
+<a class="jiathis_button_weixin"></a>
+<a class="jiathis_button_qzone"></a>
+<a class="jiathis_button_fb"></a>
+<a class="jiathis_button_douban"></a>
+<a class="jiathis_button_readitlater"></a>
+<a class="jiathis_button_evernote"></a>
+<a class="jiathis_button_ydnote"></a>
+<a href="http://www.jiathis.com/share?uid=1745061" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank"></a>
+<a class="jiathis_counter_style"></a>
+</div>
+<!-- JiaThis Button END -->
+
+
+	</div>
+	<!-- END .entry-meta -->
+
+	<!-- BEGIN .entry -->
+	<div class="entry">
+
+
+		<div class='copyright-area'>原文出处： <a target='_blank' href='http://www.jianshu.com/p/e5539d96641c'>resolvewang</a>&nbsp;&nbsp;&nbsp;</div><p>继<a href="http://www.jianshu.com/p/b26124772a00" target="_blank">上篇</a>我们谈论了Celery的基本知识后，本篇继续讲解如何一步步使用Celery构建分布式爬虫。这次我们抓取的对象定为<a href="http://docs.celeryproject.org/en/latest/index.html" target="_blank">celery官方文档</a>。</p>
+<p>首先，我们新建目录<code>distributedspider</code>，然后再在其中新建文件<code>workers.py</code>,里面内容如下</p><!-- Crayon Syntax Highlighter v2.7.1.1 -->
+
+		<div id="crayon-59386fe7028eb896126698" class="crayon-syntax crayon-theme-github crayon-font-monaco crayon-os-pc print-yes notranslate" data-settings=" minimize scroll-always" style=" margin-top: 12px; margin-bottom: 12px; font-size: 13px !important; line-height: 15px !important;">
+
+			<div class="crayon-toolbar" data-settings=" show" style="font-size: 13px !important;height: 19.5px !important; line-height: 19.5px !important;"><span class="crayon-title"></span>
+			<div class="crayon-tools" style="font-size: 13px !important;height: 19.5px !important; line-height: 19.5px !important;"><div class="crayon-button crayon-nums-button" title="切换是否显示行编号"><div class="crayon-button-icon"></div></div><div class="crayon-button crayon-plain-button" title="纯文本显示代码"><div class="crayon-button-icon"></div></div><div class="crayon-button crayon-wrap-button" title="切换自动换行"><div class="crayon-button-icon"></div></div><div class="crayon-button crayon-expand-button" title="点击展开代码"><div class="crayon-button-icon"></div></div><div class="crayon-button crayon-copy-button" title="复制代码"><div class="crayon-button-icon"></div></div><div class="crayon-button crayon-popup-button" title="在新窗口中显示代码"><div class="crayon-button-icon"></div></div><span class="crayon-language">Python</span></div></div>
+			<div class="crayon-info" style="min-height: 18.2px !important; line-height: 18.2px !important;"></div>
+			<div class="crayon-plain-wrap"><textarea wrap="soft" class="crayon-plain print-no" data-settings="dblclick" readonly style="-moz-tab-size:4; -o-tab-size:4; -webkit-tab-size:4; tab-size:4; font-size: 13px !important; line-height: 15px !important;">
+from celery import Celery
+app = Celery('crawl_task', include=['tasks'], broker='redis://223.129.0.190:6379/1', backend='redis://223.129.0.190:6379/2')
+# 官方推荐使用json作为消息序列化方式
+app.conf.update(
+    CELERY_TIMEZONE='Asia/Shanghai',
+    CELERY_ENABLE_UTC=True,
+    CELERY_ACCEPT_CONTENT=['json'],
+    CELERY_TASK_SERIALIZER='json',
+    CELERY_RESULT_SERIALIZER='json',
+)</textarea></div>
+			<div class="crayon-main" style="">
+				<table class="crayon-table">
+					<tr class="crayon-row">
+				<td class="crayon-nums " data-settings="show">
+					<div class="crayon-nums-content" style="font-size: 13px !important; line-height: 15px !important;"><div class="crayon-num" data-line="crayon-59386fe7028eb896126698-1">1</div><div class="crayon-num crayon-striped-num" data-line="crayon-59386fe7028eb896126698-2">2</div><div class="crayon-num" data-line="crayon-59386fe7028eb896126698-3">3</div><div class="crayon-num crayon-striped-num" data-line="crayon-59386fe7028eb896126698-4">4</div><div class="crayon-num" data-line="crayon-59386fe7028eb896126698-5">5</div><div class="crayon-num crayon-striped-num" data-line="crayon-59386fe7028eb896126698-6">6</div><div class="crayon-num" data-line="crayon-59386fe7028eb896126698-7">7</div><div class="crayon-num crayon-striped-num" data-line="crayon-59386fe7028eb896126698-8">8</div><div class="crayon-num" data-line="crayon-59386fe7028eb896126698-9">9</div><div class="crayon-num crayon-striped-num" data-line="crayon-59386fe7028eb896126698-10">10</div></div>
+				</td>
+						<td class="crayon-code"><div class="crayon-pre" style="font-size: 13px !important; line-height: 15px !important; -moz-tab-size:4; -o-tab-size:4; -webkit-tab-size:4; tab-size:4;"><div class="crayon-line" id="crayon-59386fe7028eb896126698-1"><span class="crayon-st">from</span><span class="crayon-h"> </span><span class="crayon-e">celery </span><span class="crayon-r">import</span><span class="crayon-h"> </span><span class="crayon-e">Celery</span></div><div class="crayon-line crayon-striped-line" id="crayon-59386fe7028eb896126698-2"><span class="crayon-v">app</span><span class="crayon-h"> </span><span class="crayon-o">=</span><span class="crayon-h"> </span><span class="crayon-e">Celery</span><span class="crayon-sy">(</span><span class="crayon-s">'crawl_task'</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-v">include</span><span class="crayon-o">=</span><span class="crayon-sy">[</span><span class="crayon-s">'tasks'</span><span class="crayon-sy">]</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-v">broker</span><span class="crayon-o">=</span><span class="crayon-s">'redis://223.129.0.190:6379/1'</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-v">backend</span><span class="crayon-o">=</span><span class="crayon-s">'redis://223.129.0.190:6379/2'</span><span class="crayon-sy">)</span></div><div class="crayon-line" id="crayon-59386fe7028eb896126698-3"><span class="crayon-c"># 官方推荐使用json作为消息序列化方式</span></div><div class="crayon-line crayon-striped-line" id="crayon-59386fe7028eb896126698-4"><span class="crayon-v">app</span><span class="crayon-sy">.</span><span class="crayon-v">conf</span><span class="crayon-sy">.</span><span class="crayon-e">update</span><span class="crayon-sy">(</span></div><div class="crayon-line" id="crayon-59386fe7028eb896126698-5"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-v">CELERY_TIMEZONE</span><span class="crayon-o">=</span><span class="crayon-s">'Asia/Shanghai'</span><span class="crayon-sy">,</span></div><div class="crayon-line crayon-striped-line" id="crayon-59386fe7028eb896126698-6"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-v">CELERY_ENABLE_UTC</span><span class="crayon-o">=</span><span class="crayon-t">True</span><span class="crayon-sy">,</span></div><div class="crayon-line" id="crayon-59386fe7028eb896126698-7"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-v">CELERY_ACCEPT_CONTENT</span><span class="crayon-o">=</span><span class="crayon-sy">[</span><span class="crayon-s">'json'</span><span class="crayon-sy">]</span><span class="crayon-sy">,</span></div><div class="crayon-line crayon-striped-line" id="crayon-59386fe7028eb896126698-8"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-v">CELERY_TASK_SERIALIZER</span><span class="crayon-o">=</span><span class="crayon-s">'json'</span><span class="crayon-sy">,</span></div><div class="crayon-line" id="crayon-59386fe7028eb896126698-9"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-v">CELERY_RESULT_SERIALIZER</span><span class="crayon-o">=</span><span class="crayon-s">'json'</span><span class="crayon-sy">,</span></div><div class="crayon-line crayon-striped-line" id="crayon-59386fe7028eb896126698-10"><span class="crayon-sy">)</span></div></div></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+<!-- [Format Time: 0.0019 seconds] -->
+<p>上述代码主要是做Celery实例的初始化工作，<code>include</code>是在初始化celery app的时候需要引入的内容，主要就是注册为网络调用的函数所在的文件。然后我们再编写任务函数，新建文件<code>tasks.py</code>,内容如下</p><!-- Crayon Syntax Highlighter v2.7.1.1 -->
+
+		<div id="crayon-59386fe7028f5096495908" class="crayon-syntax crayon-theme-github crayon-font-monaco crayon-os-pc print-yes notranslate" data-settings=" minimize scroll-always" style=" margin-top: 12px; margin-bottom: 12px; font-size: 13px !important; line-height: 15px !important;">
+
+			<div class="crayon-toolbar" data-settings=" show" style="font-size: 13px !important;height: 19.5px !important; line-height: 19.5px !important;"><span class="crayon-title"></span>
+			<div class="crayon-tools" style="font-size: 13px !important;height: 19.5px !important; line-height: 19.5px !important;"><div class="crayon-button crayon-nums-button" title="切换是否显示行编号"><div class="crayon-button-icon"></div></div><div class="crayon-button crayon-plain-button" title="纯文本显示代码"><div class="crayon-button-icon"></div></div><div class="crayon-button crayon-wrap-button" title="切换自动换行"><div class="crayon-button-icon"></div></div><div class="crayon-button crayon-expand-button" title="点击展开代码"><div class="crayon-button-icon"></div></div><div class="crayon-button crayon-copy-button" title="复制代码"><div class="crayon-button-icon"></div></div><div class="crayon-button crayon-popup-button" title="在新窗口中显示代码"><div class="crayon-button-icon"></div></div><span class="crayon-language">Python</span></div></div>
+			<div class="crayon-info" style="min-height: 18.2px !important; line-height: 18.2px !important;"></div>
+			<div class="crayon-plain-wrap"><textarea wrap="soft" class="crayon-plain print-no" data-settings="dblclick" readonly style="-moz-tab-size:4; -o-tab-size:4; -webkit-tab-size:4; tab-size:4; font-size: 13px !important; line-height: 15px !important;">
+import requests
+from bs4 import BeautifulSoup
+from workers import app
+@app.task
+def crawl(url):
+    print('正在抓取链接{}'.format(url))
+    resp_text = requests.get(url).text
+    soup = BeautifulSoup(resp_text, 'html.parser')
+    return soup.find('h1').text</textarea></div>
+			<div class="crayon-main" style="">
+				<table class="crayon-table">
+					<tr class="crayon-row">
+				<td class="crayon-nums " data-settings="show">
+					<div class="crayon-nums-content" style="font-size: 13px !important; line-height: 15px !important;"><div class="crayon-num" data-line="crayon-59386fe7028f5096495908-1">1</div><div class="crayon-num crayon-striped-num" data-line="crayon-59386fe7028f5096495908-2">2</div><div class="crayon-num" data-line="crayon-59386fe7028f5096495908-3">3</div><div class="crayon-num crayon-striped-num" data-line="crayon-59386fe7028f5096495908-4">4</div><div class="crayon-num" data-line="crayon-59386fe7028f5096495908-5">5</div><div class="crayon-num crayon-striped-num" data-line="crayon-59386fe7028f5096495908-6">6</div><div class="crayon-num" data-line="crayon-59386fe7028f5096495908-7">7</div><div class="crayon-num crayon-striped-num" data-line="crayon-59386fe7028f5096495908-8">8</div><div class="crayon-num" data-line="crayon-59386fe7028f5096495908-9">9</div></div>
+				</td>
+						<td class="crayon-code"><div class="crayon-pre" style="font-size: 13px !important; line-height: 15px !important; -moz-tab-size:4; -o-tab-size:4; -webkit-tab-size:4; tab-size:4;"><div class="crayon-line" id="crayon-59386fe7028f5096495908-1"><span class="crayon-r">import</span><span class="crayon-h"> </span><span class="crayon-e">requests</span></div><div class="crayon-line crayon-striped-line" id="crayon-59386fe7028f5096495908-2"><span class="crayon-st">from</span><span class="crayon-h"> </span><span class="crayon-e">bs4 </span><span class="crayon-r">import</span><span class="crayon-h"> </span><span class="crayon-e">BeautifulSoup</span></div><div class="crayon-line" id="crayon-59386fe7028f5096495908-3"><span class="crayon-st">from</span><span class="crayon-h"> </span><span class="crayon-e">workers </span><span class="crayon-r">import</span><span class="crayon-h"> </span><span class="crayon-i">app</span></div><div class="crayon-line crayon-striped-line" id="crayon-59386fe7028f5096495908-4"><span class="crayon-sy">@</span><span class="crayon-v">app</span><span class="crayon-sy">.</span><span class="crayon-e">task</span></div><div class="crayon-line" id="crayon-59386fe7028f5096495908-5"><span class="crayon-r">def</span><span class="crayon-h"> </span><span class="crayon-e">crawl</span><span class="crayon-sy">(</span><span class="crayon-v">url</span><span class="crayon-sy">)</span><span class="crayon-o">:</span></div><div class="crayon-line crayon-striped-line" id="crayon-59386fe7028f5096495908-6"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-k ">print</span><span class="crayon-sy">(</span><span class="crayon-s">'正在抓取链接{}'</span><span class="crayon-sy">.</span><span class="crayon-k ">format</span><span class="crayon-sy">(</span><span class="crayon-v">url</span><span class="crayon-sy">)</span><span class="crayon-sy">)</span></div><div class="crayon-line" id="crayon-59386fe7028f5096495908-7"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-v">resp_text</span><span class="crayon-h"> </span><span class="crayon-o">=</span><span class="crayon-h"> </span><span class="crayon-v">requests</span><span class="crayon-sy">.</span><span class="crayon-e">get</span><span class="crayon-sy">(</span><span class="crayon-v">url</span><span class="crayon-sy">)</span><span class="crayon-sy">.</span><span class="crayon-e">text</span></div><div class="crayon-line crayon-striped-line" id="crayon-59386fe7028f5096495908-8"><span class="crayon-e">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-v">soup</span><span class="crayon-h"> </span><span class="crayon-o">=</span><span class="crayon-h"> </span><span class="crayon-e">BeautifulSoup</span><span class="crayon-sy">(</span><span class="crayon-v">resp_text</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-s">'html.parser'</span><span class="crayon-sy">)</span></div><div class="crayon-line" id="crayon-59386fe7028f5096495908-9"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-st">return</span><span class="crayon-h"> </span><span class="crayon-v">soup</span><span class="crayon-sy">.</span><span class="crayon-e">find</span><span class="crayon-sy">(</span><span class="crayon-s">'h1'</span><span class="crayon-sy">)</span><span class="crayon-sy">.</span><span class="crayon-v">text</span></div></div></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+<!-- [Format Time: 0.0031 seconds] -->
+<p>它的作用很简单，就是抓取指定的url，并且把标签为<code>h1</code>的元素提取出来</p>
+<p>最后，我们新建文件<code>task_dispatcher.py</code>，内容如下</p><!-- Crayon Syntax Highlighter v2.7.1.1 -->
+
+		<div id="crayon-59386fe7028fa644532781" class="crayon-syntax crayon-theme-github crayon-font-monaco crayon-os-pc print-yes notranslate" data-settings=" minimize scroll-always" style=" margin-top: 12px; margin-bottom: 12px; font-size: 13px !important; line-height: 15px !important;">
+
+			<div class="crayon-toolbar" data-settings=" show" style="font-size: 13px !important;height: 19.5px !important; line-height: 19.5px !important;"><span class="crayon-title"></span>
+			<div class="crayon-tools" style="font-size: 13px !important;height: 19.5px !important; line-height: 19.5px !important;"><div class="crayon-button crayon-nums-button" title="切换是否显示行编号"><div class="crayon-button-icon"></div></div><div class="crayon-button crayon-plain-button" title="纯文本显示代码"><div class="crayon-button-icon"></div></div><div class="crayon-button crayon-wrap-button" title="切换自动换行"><div class="crayon-button-icon"></div></div><div class="crayon-button crayon-expand-button" title="点击展开代码"><div class="crayon-button-icon"></div></div><div class="crayon-button crayon-copy-button" title="复制代码"><div class="crayon-button-icon"></div></div><div class="crayon-button crayon-popup-button" title="在新窗口中显示代码"><div class="crayon-button-icon"></div></div><span class="crayon-language">Python</span></div></div>
+			<div class="crayon-info" style="min-height: 18.2px !important; line-height: 18.2px !important;"></div>
+			<div class="crayon-plain-wrap"><textarea wrap="soft" class="crayon-plain print-no" data-settings="dblclick" readonly style="-moz-tab-size:4; -o-tab-size:4; -webkit-tab-size:4; tab-size:4; font-size: 13px !important; line-height: 15px !important;">
+from workers import app
+url_list = [
+    'http://docs.celeryproject.org/en/latest/getting-started/introduction.html',
+    'http://docs.celeryproject.org/en/latest/getting-started/brokers/index.html',
+    'http://docs.celeryproject.org/en/latest/getting-started/first-steps-with-celery.html',
+    'http://docs.celeryproject.org/en/latest/getting-started/next-steps.html',
+    'http://docs.celeryproject.org/en/latest/getting-started/resources.html',
+    'http://docs.celeryproject.org/en/latest/userguide/application.html',
+    'http://docs.celeryproject.org/en/latest/userguide/tasks.html',
+    'http://docs.celeryproject.org/en/latest/userguide/canvas.html',
+    'http://docs.celeryproject.org/en/latest/userguide/workers.html',
+    'http://docs.celeryproject.org/en/latest/userguide/daemonizing.html',
+    'http://docs.celeryproject.org/en/latest/userguide/periodic-tasks.html'
+]
+def manage_crawl_task(urls):
+    for url in urls:
+        app.send_task('tasks.crawl', args=(url,))
+if __name__ == '__main__':
+    manage_crawl_task(url_list)</textarea></div>
+			<div class="crayon-main" style="">
+				<table class="crayon-table">
+					<tr class="crayon-row">
+				<td class="crayon-nums " data-settings="show">
+					<div class="crayon-nums-content" style="font-size: 13px !important; line-height: 15px !important;"><div class="crayon-num" data-line="crayon-59386fe7028fa644532781-1">1</div><div class="crayon-num crayon-striped-num" data-line="crayon-59386fe7028fa644532781-2">2</div><div class="crayon-num" data-line="crayon-59386fe7028fa644532781-3">3</div><div class="crayon-num crayon-striped-num" data-line="crayon-59386fe7028fa644532781-4">4</div><div class="crayon-num" data-line="crayon-59386fe7028fa644532781-5">5</div><div class="crayon-num crayon-striped-num" data-line="crayon-59386fe7028fa644532781-6">6</div><div class="crayon-num" data-line="crayon-59386fe7028fa644532781-7">7</div><div class="crayon-num crayon-striped-num" data-line="crayon-59386fe7028fa644532781-8">8</div><div class="crayon-num" data-line="crayon-59386fe7028fa644532781-9">9</div><div class="crayon-num crayon-striped-num" data-line="crayon-59386fe7028fa644532781-10">10</div><div class="crayon-num" data-line="crayon-59386fe7028fa644532781-11">11</div><div class="crayon-num crayon-striped-num" data-line="crayon-59386fe7028fa644532781-12">12</div><div class="crayon-num" data-line="crayon-59386fe7028fa644532781-13">13</div><div class="crayon-num crayon-striped-num" data-line="crayon-59386fe7028fa644532781-14">14</div><div class="crayon-num" data-line="crayon-59386fe7028fa644532781-15">15</div><div class="crayon-num crayon-striped-num" data-line="crayon-59386fe7028fa644532781-16">16</div><div class="crayon-num" data-line="crayon-59386fe7028fa644532781-17">17</div><div class="crayon-num crayon-striped-num" data-line="crayon-59386fe7028fa644532781-18">18</div><div class="crayon-num" data-line="crayon-59386fe7028fa644532781-19">19</div></div>
+				</td>
+						<td class="crayon-code"><div class="crayon-pre" style="font-size: 13px !important; line-height: 15px !important; -moz-tab-size:4; -o-tab-size:4; -webkit-tab-size:4; tab-size:4;"><div class="crayon-line" id="crayon-59386fe7028fa644532781-1"><span class="crayon-st">from</span><span class="crayon-h"> </span><span class="crayon-e">workers </span><span class="crayon-r">import</span><span class="crayon-h"> </span><span class="crayon-e">app</span></div><div class="crayon-line crayon-striped-line" id="crayon-59386fe7028fa644532781-2"><span class="crayon-v">url_list</span><span class="crayon-h"> </span><span class="crayon-o">=</span><span class="crayon-h"> </span><span class="crayon-sy">[</span></div><div class="crayon-line" id="crayon-59386fe7028fa644532781-3"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-s">'http://docs.celeryproject.org/en/latest/getting-started/introduction.html'</span><span class="crayon-sy">,</span></div><div class="crayon-line crayon-striped-line" id="crayon-59386fe7028fa644532781-4"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-s">'http://docs.celeryproject.org/en/latest/getting-started/brokers/index.html'</span><span class="crayon-sy">,</span></div><div class="crayon-line" id="crayon-59386fe7028fa644532781-5"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-s">'http://docs.celeryproject.org/en/latest/getting-started/first-steps-with-celery.html'</span><span class="crayon-sy">,</span></div><div class="crayon-line crayon-striped-line" id="crayon-59386fe7028fa644532781-6"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-s">'http://docs.celeryproject.org/en/latest/getting-started/next-steps.html'</span><span class="crayon-sy">,</span></div><div class="crayon-line" id="crayon-59386fe7028fa644532781-7"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-s">'http://docs.celeryproject.org/en/latest/getting-started/resources.html'</span><span class="crayon-sy">,</span></div><div class="crayon-line crayon-striped-line" id="crayon-59386fe7028fa644532781-8"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-s">'http://docs.celeryproject.org/en/latest/userguide/application.html'</span><span class="crayon-sy">,</span></div><div class="crayon-line" id="crayon-59386fe7028fa644532781-9"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-s">'http://docs.celeryproject.org/en/latest/userguide/tasks.html'</span><span class="crayon-sy">,</span></div><div class="crayon-line crayon-striped-line" id="crayon-59386fe7028fa644532781-10"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-s">'http://docs.celeryproject.org/en/latest/userguide/canvas.html'</span><span class="crayon-sy">,</span></div><div class="crayon-line" id="crayon-59386fe7028fa644532781-11"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-s">'http://docs.celeryproject.org/en/latest/userguide/workers.html'</span><span class="crayon-sy">,</span></div><div class="crayon-line crayon-striped-line" id="crayon-59386fe7028fa644532781-12"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-s">'http://docs.celeryproject.org/en/latest/userguide/daemonizing.html'</span><span class="crayon-sy">,</span></div><div class="crayon-line" id="crayon-59386fe7028fa644532781-13"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-s">'http://docs.celeryproject.org/en/latest/userguide/periodic-tasks.html'</span></div><div class="crayon-line crayon-striped-line" id="crayon-59386fe7028fa644532781-14"><span class="crayon-sy">]</span></div><div class="crayon-line" id="crayon-59386fe7028fa644532781-15"><span class="crayon-r">def</span><span class="crayon-h"> </span><span class="crayon-e">manage_crawl_task</span><span class="crayon-sy">(</span><span class="crayon-v">urls</span><span class="crayon-sy">)</span><span class="crayon-o">:</span></div><div class="crayon-line crayon-striped-line" id="crayon-59386fe7028fa644532781-16"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-st">for</span><span class="crayon-h"> </span><span class="crayon-e">url </span><span class="crayon-st">in</span><span class="crayon-h"> </span><span class="crayon-v">urls</span><span class="crayon-o">:</span></div><div class="crayon-line" id="crayon-59386fe7028fa644532781-17"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-v">app</span><span class="crayon-sy">.</span><span class="crayon-e">send_task</span><span class="crayon-sy">(</span><span class="crayon-s">'tasks.crawl'</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-v">args</span><span class="crayon-o">=</span><span class="crayon-sy">(</span><span class="crayon-v">url</span><span class="crayon-sy">,</span><span class="crayon-sy">)</span><span class="crayon-sy">)</span></div><div class="crayon-line crayon-striped-line" id="crayon-59386fe7028fa644532781-18"><span class="crayon-st">if</span><span class="crayon-h"> </span><span class="crayon-v">__name__</span><span class="crayon-h"> </span><span class="crayon-o">==</span><span class="crayon-h"> </span><span class="crayon-s">'__main__'</span><span class="crayon-o">:</span></div><div class="crayon-line" id="crayon-59386fe7028fa644532781-19"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-e">manage_crawl_task</span><span class="crayon-sy">(</span><span class="crayon-v">url_list</span><span class="crayon-sy">)</span></div></div></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+<!-- [Format Time: 0.0025 seconds] -->
+<p>这段代码的作用主要就是给worker发送任务，任务是<code>tasks.crawl</code>，参数是<code>url</code>(元祖的形式)</p>
+<p>现在，让我们在节点A(hostname为<em>resolvewang</em>的主机)上启动worker</p><!-- Crayon Syntax Highlighter v2.7.1.1 -->
+
+		<div id="crayon-59386fe7028fe600806971" class="crayon-syntax crayon-theme-github crayon-font-monaco crayon-os-pc print-yes notranslate" data-settings=" minimize scroll-always" style=" margin-top: 12px; margin-bottom: 12px; font-size: 13px !important; line-height: 15px !important;">
+
+			<div class="crayon-toolbar" data-settings=" show" style="font-size: 13px !important;height: 19.5px !important; line-height: 19.5px !important;"><span class="crayon-title"></span>
+			<div class="crayon-tools" style="font-size: 13px !important;height: 19.5px !important; line-height: 19.5px !important;"><div class="crayon-button crayon-nums-button" title="切换是否显示行编号"><div class="crayon-button-icon"></div></div><div class="crayon-button crayon-plain-button" title="纯文本显示代码"><div class="crayon-button-icon"></div></div><div class="crayon-button crayon-wrap-button" title="切换自动换行"><div class="crayon-button-icon"></div></div><div class="crayon-button crayon-expand-button" title="点击展开代码"><div class="crayon-button-icon"></div></div><div class="crayon-button crayon-copy-button" title="复制代码"><div class="crayon-button-icon"></div></div><div class="crayon-button crayon-popup-button" title="在新窗口中显示代码"><div class="crayon-button-icon"></div></div><span class="crayon-language">Python</span></div></div>
+			<div class="crayon-info" style="min-height: 18.2px !important; line-height: 18.2px !important;"></div>
+			<div class="crayon-plain-wrap"><textarea wrap="soft" class="crayon-plain print-no" data-settings="dblclick" readonly style="-moz-tab-size:4; -o-tab-size:4; -webkit-tab-size:4; tab-size:4; font-size: 13px !important; line-height: 15px !important;">
+celery -A workers worker -c 2 -l info</textarea></div>
+			<div class="crayon-main" style="">
+				<table class="crayon-table">
+					<tr class="crayon-row">
+				<td class="crayon-nums " data-settings="show">
+					<div class="crayon-nums-content" style="font-size: 13px !important; line-height: 15px !important;"><div class="crayon-num" data-line="crayon-59386fe7028fe600806971-1">1</div></div>
+				</td>
+						<td class="crayon-code"><div class="crayon-pre" style="font-size: 13px !important; line-height: 15px !important; -moz-tab-size:4; -o-tab-size:4; -webkit-tab-size:4; tab-size:4;"><div class="crayon-line" id="crayon-59386fe7028fe600806971-1"><span class="crayon-v">celery</span><span class="crayon-h"> </span><span class="crayon-o">-</span><span class="crayon-i">A</span><span class="crayon-h"> </span><span class="crayon-e">workers </span><span class="crayon-v">worker</span><span class="crayon-h"> </span><span class="crayon-o">-</span><span class="crayon-i">c</span><span class="crayon-h"> </span><span class="crayon-cn">2</span><span class="crayon-h"> </span><span class="crayon-o">-</span><span class="crayon-i">l</span><span class="crayon-h"> </span><span class="crayon-v">info</span></div></div></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+<!-- [Format Time: 0.0008 seconds] -->
+<p>这里 <code>-c</code>指定了线程数为2， <code>-l</code>表示日志等级是<code>info</code>。我们把代码拷贝到节点B(节点名为<em>wpm</em>的主机)，同样以相同命令启动worker，便可以看到以下输出</p>
+<div class="image-package">
+<p><img src="http://upload-images.jianshu.io/upload_images/1514374-90168064efa1794c.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" /></p>
+<div class="image-caption" style="text-align: center">两个节点</div>
+</div>
+<p>可以看到左边节点(A)先是<code>all alone</code>，表示只有一个节点；后来再节点B启动后，它便和B同步了</p><!-- Crayon Syntax Highlighter v2.7.1.1 -->
+
+		<div id="crayon-59386fe702902223642554" class="crayon-syntax crayon-theme-github crayon-font-monaco crayon-os-pc print-yes notranslate" data-settings=" minimize scroll-always" style=" margin-top: 12px; margin-bottom: 12px; font-size: 13px !important; line-height: 15px !important;">
+
+			<div class="crayon-toolbar" data-settings=" show" style="font-size: 13px !important;height: 19.5px !important; line-height: 19.5px !important;"><span class="crayon-title"></span>
+			<div class="crayon-tools" style="font-size: 13px !important;height: 19.5px !important; line-height: 19.5px !important;"><div class="crayon-button crayon-nums-button" title="切换是否显示行编号"><div class="crayon-button-icon"></div></div><div class="crayon-button crayon-plain-button" title="纯文本显示代码"><div class="crayon-button-icon"></div></div><div class="crayon-button crayon-wrap-button" title="切换自动换行"><div class="crayon-button-icon"></div></div><div class="crayon-button crayon-expand-button" title="点击展开代码"><div class="crayon-button-icon"></div></div><div class="crayon-button crayon-copy-button" title="复制代码"><div class="crayon-button-icon"></div></div><div class="crayon-button crayon-popup-button" title="在新窗口中显示代码"><div class="crayon-button-icon"></div></div><span class="crayon-language">Python</span></div></div>
+			<div class="crayon-info" style="min-height: 18.2px !important; line-height: 18.2px !important;"></div>
+			<div class="crayon-plain-wrap"><textarea wrap="soft" class="crayon-plain print-no" data-settings="dblclick" readonly style="-moz-tab-size:4; -o-tab-size:4; -webkit-tab-size:4; tab-size:4; font-size: 13px !important; line-height: 15px !important;">
+sync with celery@wpm</textarea></div>
+			<div class="crayon-main" style="">
+				<table class="crayon-table">
+					<tr class="crayon-row">
+				<td class="crayon-nums " data-settings="show">
+					<div class="crayon-nums-content" style="font-size: 13px !important; line-height: 15px !important;"><div class="crayon-num" data-line="crayon-59386fe702902223642554-1">1</div></div>
+				</td>
+						<td class="crayon-code"><div class="crayon-pre" style="font-size: 13px !important; line-height: 15px !important; -moz-tab-size:4; -o-tab-size:4; -webkit-tab-size:4; tab-size:4;"><div class="crayon-line" id="crayon-59386fe702902223642554-1"><span class="crayon-e">sync </span><span class="crayon-st">with</span><span class="crayon-h"> </span><span class="crayon-v">celery</span><span class="crayon-sy">@</span><span class="crayon-v">wpm</span></div></div></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+<!-- [Format Time: 0.0007 seconds] -->
+<p>这个时候，我们运行给这两个worker节点发送抓取任务</p><!-- Crayon Syntax Highlighter v2.7.1.1 -->
+
+		<div id="crayon-59386fe702905327683475" class="crayon-syntax crayon-theme-github crayon-font-monaco crayon-os-pc print-yes notranslate" data-settings=" minimize scroll-always" style=" margin-top: 12px; margin-bottom: 12px; font-size: 13px !important; line-height: 15px !important;">
+
+			<div class="crayon-toolbar" data-settings=" show" style="font-size: 13px !important;height: 19.5px !important; line-height: 19.5px !important;"><span class="crayon-title"></span>
+			<div class="crayon-tools" style="font-size: 13px !important;height: 19.5px !important; line-height: 19.5px !important;"><div class="crayon-button crayon-nums-button" title="切换是否显示行编号"><div class="crayon-button-icon"></div></div><div class="crayon-button crayon-plain-button" title="纯文本显示代码"><div class="crayon-button-icon"></div></div><div class="crayon-button crayon-wrap-button" title="切换自动换行"><div class="crayon-button-icon"></div></div><div class="crayon-button crayon-expand-button" title="点击展开代码"><div class="crayon-button-icon"></div></div><div class="crayon-button crayon-copy-button" title="复制代码"><div class="crayon-button-icon"></div></div><div class="crayon-button crayon-popup-button" title="在新窗口中显示代码"><div class="crayon-button-icon"></div></div><span class="crayon-language">Python</span></div></div>
+			<div class="crayon-info" style="min-height: 18.2px !important; line-height: 18.2px !important;"></div>
+			<div class="crayon-plain-wrap"><textarea wrap="soft" class="crayon-plain print-no" data-settings="dblclick" readonly style="-moz-tab-size:4; -o-tab-size:4; -webkit-tab-size:4; tab-size:4; font-size: 13px !important; line-height: 15px !important;">
+python task_dispatcher.py</textarea></div>
+			<div class="crayon-main" style="">
+				<table class="crayon-table">
+					<tr class="crayon-row">
+				<td class="crayon-nums " data-settings="show">
+					<div class="crayon-nums-content" style="font-size: 13px !important; line-height: 15px !important;"><div class="crayon-num" data-line="crayon-59386fe702905327683475-1">1</div></div>
+				</td>
+						<td class="crayon-code"><div class="crayon-pre" style="font-size: 13px !important; line-height: 15px !important; -moz-tab-size:4; -o-tab-size:4; -webkit-tab-size:4; tab-size:4;"><div class="crayon-line" id="crayon-59386fe702905327683475-1"><span class="crayon-e">python </span><span class="crayon-v">task_dispatcher</span><span class="crayon-sy">.</span><span class="crayon-v">py</span></div></div></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+<!-- [Format Time: 0.0004 seconds] -->
+<p>可以看到如下输出</p>
+<div class="image-package">
+<p><img src="http://upload-images.jianshu.io/upload_images/1514374-67f8267a09301ab0.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" /></p>
+<div class="image-caption">分布式抓取示意图</div>
+</div>
+<p>可以看到两个节点都在执行抓取任务，并且它们的任务不会重复。我们再在redis里看看结果</p>
+<div class="image-package">
+<p><img src="http://upload-images.jianshu.io/upload_images/1514374-518be598768fab09.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" /></p>
+<div class="image-caption" style="text-align: center">backend示意图</div>
+</div>
+<p>可以看到一共有11条结果，说明 <code>tasks.crawl</code>中返回的数据都在db2(backend)中了，并且以json的形式存储了起来，除了返回的结果，还有执行是否成功等信息。</p>
+<p>到此，我们就实现了一个很基础的分布式网络爬虫，但是它还不具有很好的扩展性，而且貌似太简单了&#8230;下一篇我将以微博数据采集为例来演示如何构建一个稳健的分布式网络爬虫。</p>
+<hr />
+<p>对微博大规模数据采集感兴趣的同学可以关注一下<a href="https://github.com/ResolveWang/WeiboSpider" target="_blank">分布式微博爬虫</a>，用用也是极好的</p>
+
+
+
+
+    <div class="post-adds">
+        <span data-post-id="87826" class=" btn-bluet-bigger href-style vote-post-up   register-user-only "><i class="fa  fa-thumbs-o-up"></i> <h10 id="87826votetotal">1</h10> 赞</span>
+        <span data-book-type="1" data-site-id="13" data-item-id="87826" data-item-type="1" class=" btn-bluet-bigger href-style bookmark-btn  register-user-only "><i class="fa fa-bookmark-o  "></i>  收藏</span>
+
+                    <a href="#article-comment"><span class="btn-bluet-bigger href-style hide-on-480"><i class="fa fa-comments-o"></i>  评论</span></a>
+
+
+
+        <!-- JiaThis Button BEGIN -->
+        <div class="jiathis_style_24x24" style="display: inline-flex; position: relative; margin: 0; clear: both;float: right;">
+            <a class="jiathis_button_tsina"></a>
+            <a class="jiathis_button_weixin"></a>
+            <a class="jiathis_button_qzone"></a>
+            <a class="jiathis_button_fb hide-on-480"></a>
+            <a href="http://www.jiathis.com/share?uid=1745061" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank"></a>
+        </div>
+
+    </div>
+
+
+
+
+        <!-- BEGIN #author-bio -->
+
+
+<!-- END #author-bio -->
+	</div>
+	<!-- END .entry -->
+
+
+<script type="text/javascript" >
+var jiathis_config={
+	data_track_clickback:false,
+	title:"分享从伯乐在线看到的一篇好文章 ",
+	summary:"《如何构建一个分布式爬虫：基础篇》",
+	pic:"http://upload-images.jianshu.io/upload_images/1514374-90168064efa1794c.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240",
+	appkey:{
+         "tsina": 1473879058    },
+	ralateuid:{
+		"tsina": 5305630013	},
+	hideMore:false
+}
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js?uid=1745061" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+			<div class="textwidget"><p><a href='http://group.jobbole.com/22945/' target='_blank'><img src='http://wx3.sinaimg.cn/mw690/bfdcef89gy1ffhg3psj2yj20h803cgm9.jpg' /></a></p>
+</div>
+
+</div>
+<!-- END .post -->
+            <div style="text-align: left;">
+            <h3>相关文章</h3>
+            <ul style="font-size: 13px; list-style: disc inside;">
+                                    <li>
+                    <span class="digg-item-updated-title">
+                        <a title="如何构建一个分布式爬虫：理论篇" target="_blank" href="http://python.jobbole.com/87823/?utm_source=blog.jobbole.com&utm_medium=relatedPosts">如何构建一个分布式爬虫：理论篇</a>
+                                            </span>
+                    </li>
+                            </ul>
+        </div>
+
+
+<div style="text-align: left;">
+    <h3>可能感兴趣的话题</h3>
+    <ul style="font-size: 13px; list-style: disc inside;">
+                        <li>
+                    <a href="http://group.jobbole.com/30965/?utm_source=python.jobbole.com&utm_medium=article-related-group-topic" title="楚楚街：2016招聘笔试（解密）" target="_blank">楚楚街：2016招聘笔试（解密）</a>
+                                    </li>
+                            <li>
+                    <a href="http://group.jobbole.com/30963/?utm_source=python.jobbole.com&utm_medium=article-related-group-topic" title="蘑菇街：2016招聘笔试（最大间隔）" target="_blank">蘑菇街：2016招聘笔试（最大间隔）</a>
+                     &middot; <a href="http://group.jobbole.com/30963/#comments" target="_blank"><i class="fa fa-comments-o"></i> 3</a>                </li>
+                            <li>
+                    <a href="http://group.jobbole.com/30959/?utm_source=python.jobbole.com&utm_medium=article-related-group-topic" title="蘑菇街：2016招聘笔试（回文串）" target="_blank">蘑菇街：2016招聘笔试（回文串）</a>
+                                    </li>
+                            <li>
+                    <a href="http://group.jobbole.com/30943/?utm_source=python.jobbole.com&utm_medium=article-related-group-topic" title="哪些表现，才能称的上对「技术富有激情」？" target="_blank">哪些表现，才能称的上对「技术富有激情」？</a>
+                                    </li>
+                            <li>
+                    <a href="http://group.jobbole.com/30882/?utm_source=python.jobbole.com&utm_medium=article-related-group-topic" title="美团2016招聘笔试：股票交易日" target="_blank">美团2016招聘笔试：股票交易日</a>
+                     &middot; <a href="http://group.jobbole.com/30882/#comments" target="_blank"><i class="fa fa-comments-o"></i> 1</a>                </li>
+                            <li>
+                    <a href="http://group.jobbole.com/30941/?utm_source=python.jobbole.com&utm_medium=article-related-group-topic" title="找了快2个月了，都没找到web前端工作" target="_blank">找了快2个月了，都没找到web前端工作</a>
+                     &middot; <a href="http://group.jobbole.com/30941/#comments" target="_blank"><i class="fa fa-comments-o"></i> 7</a>                </li>
+                </ul>
+</div>
+
+            <div id="article-comment" class="dot-box center-align">
+
+                        <a href="http://www.jobbole.com/login?redirect=http://python.jobbole.com/87826/"><button type="button" class="btn btn-non-transparent">登录后评论</button></a>
+
+            <a target="_blank" href="http://www.jobbole.com/register"><button type="button" class="btn btn-primary">新用户注册</button></a>
+
+            <br/><br/>
+            <span>直接登录</span>
+            <style type="text/css">.t_login_text{margin:0; padding:0;}.t_login_button{margin:0; padding: 5px 0;}.t_login_button a{margin:0; padding-right:3px; line-height:25px}.t_login_button img{display:inline; border:none;}</style><!-- 使用社交帐号登录 来自 WordPress连接微博 插件 --><span class="connectBox1 t_login_button"><a href="http://python.jobbole.com/wp-content/plugins/wp-connect/login.php?go=weixin&redirect_url=http%3A%2F%2Fpython.jobbole.com%2F87826%2F" title="微信" rel="nofollow"><img src="http://python.jobbole.com/wp-content/plugins/wp-connect/images/login/btn_weixin.png" /></a><a href="http://python.jobbole.com/wp-content/plugins/wp-connect/login.php?go=qzone&redirect_url=http%3A%2F%2Fpython.jobbole.com%2F87826%2F" title="QQ" rel="nofollow"><img src="http://python.jobbole.com/wp-content/plugins/wp-connect/images/login/btn_qzone.png" /></a><a href="http://python.jobbole.com/wp-content/plugins/wp-connect/login.php?go=sina&redirect_url=http%3A%2F%2Fpython.jobbole.com%2F87826%2F" title="新浪微博" rel="nofollow"><img src="http://python.jobbole.com/wp-content/plugins/wp-connect/images/login/btn_sina.png" /></a><a href="http://python.jobbole.com/wp-content/plugins/wp-connect/login.php?go=douban&redirect_url=http%3A%2F%2Fpython.jobbole.com%2F87826%2F" title="豆瓣" rel="nofollow"><img src="http://python.jobbole.com/wp-content/plugins/wp-connect/images/login/btn_douban.png" /></a><a href="http://python.jobbole.com/wp-content/plugins/wp-connect/login.php?go=github&redirect_url=http%3A%2F%2Fpython.jobbole.com%2F87826%2F" title="GitHub" rel="nofollow"><img src="http://python.jobbole.com/wp-content/plugins/wp-connect/images/login/btn_github.png" /></a></span>        </div>
+
+
+    <div id="comment_list" class="comments">
+
+
+    </div>
+
+
+
+</div>
+<!-- END .grid-8 -->
+
+<!-- BEGIN #sidebar -->
+<div id="sidebar" class="grid-4">
+
+	    <div id="text-2" class="widget widget_text">			<div class="textwidget"><p><a href="http://group.jobbole.com/22945/" target="_blank"><img src="http://wx4.sinaimg.cn/mw690/bfdcef89gy1fdd9j7jnsjj208c046q3c.jpg" /></a></p>
+</div>
+		</div>
+        <h3 class="widget-title">
+            <a target="_blank" href="http://group.jobbole.com/category/tech/python/?utm_source=python.jobbole.com&utm_medium=sidebar-group-topics-more">Python小组话题</a>
+            <span style="float:right;"><a target="_blank" href="http://group.jobbole.com/newtopic/?group=15">我有新话题 <i class='fa fa-commenting-o'></i></a></span>
+        </h3>
+
+        <!-- BEGIN .container -->
+        <div class="container">
+
+
+                <!-- BEGIN .grid-4 -->
+                <div class="grid-4 floated-thumb">
+
+
+                            <!-- BEGIN .post-thumb -->
+                            <div class="author-thumb">
+
+                                <a target="_blank" href="http://www.jobbole.com/members/raikin" ">
+                                    <img src="http://jbcdn2.b0.upaiyun.com/2017/04/cc0ab2e4e47923ab88980c5ba99d2c5d.jpg" alt="" width="34" height="34" />
+                                </a>
+
+                            </div>
+                            <!-- END .post-thumb -->
+
+                        <!-- BEGIN .post-meta -->
+                        <div class="post-meta">
+
+                            <p>
+                                <a class="meta-title" target="_blank" title="有没有非互联网行业的小伙伴自学编程哒？" href="http://group.jobbole.com/27066/?utm_source=python.jobbole.com&utm_medium=sidebar-group-topic">有没有非互联网行业的小伙伴自学编程...</a><br />
+                                <a href="http://group.jobbole.com/author/raikin/">叫我小K咯</a> 发起
+                                                                    • 219 回复
+
+                            </p>
+
+                        </div>
+                        <!-- END .post-meta -->
+
+                        <div class="clear"></div>
+
+
+                            <!-- BEGIN .post-thumb -->
+                            <div class="author-thumb">
+
+                                <a target="_blank" href="http://www.jobbole.com/members/81513950" ">
+                                    <img src="http://img3.douban.com/icon/u81513950-1.jpg" alt="" width="34" height="34" />
+                                </a>
+
+                            </div>
+                            <!-- END .post-thumb -->
+
+                        <!-- BEGIN .post-meta -->
+                        <div class="post-meta">
+
+                            <p>
+                                <a class="meta-title" target="_blank" title="零基础自学Python感觉很难，不像大家说的那么简单" href="http://group.jobbole.com/17537/?utm_source=python.jobbole.com&utm_medium=sidebar-group-topic">零基础自学Python感觉很难，不像大...</a><br />
+                                <a href="http://group.jobbole.com/author/81513950/">keepcalm</a> 发起
+                                                                    • 83 回复
+
+                            </p>
+
+                        </div>
+                        <!-- END .post-meta -->
+
+                        <div class="clear"></div>
+
+
+                            <!-- BEGIN .post-thumb -->
+                            <div class="author-thumb">
+
+                                <a target="_blank" href="http://www.jobbole.com/members/poleronline" ">
+                                    <img src="http://jbcdn2.b0.upaiyun.com/2015/04/8fbdaaa5ea6d3b49c8c1c825aafeb5d9.png" alt="" width="34" height="34" />
+                                </a>
+
+                            </div>
+                            <!-- END .post-thumb -->
+
+                        <!-- BEGIN .post-meta -->
+                        <div class="post-meta">
+
+                            <p>
+                                <a class="meta-title" target="_blank" title="【Django源码浅析】—Django runserver启动流程与URL路由" href="http://group.jobbole.com/30886/?utm_source=python.jobbole.com&utm_medium=sidebar-group-topic">【Django源码浅析】—Django runser...</a><br />
+                                <a href="http://group.jobbole.com/author/poleronline/">杨念初L</a> 发起
+
+                            </p>
+
+                        </div>
+                        <!-- END .post-meta -->
+
+                        <div class="clear"></div>
+
+
+                            <!-- BEGIN .post-thumb -->
+                            <div class="author-thumb">
+
+                                <a target="_blank" href="http://www.jobbole.com/members/crazyrabbit" ">
+                                    <img src="http://jbcdn2.b0.upaiyun.com/2016/10/4c83a3aa65cb2210cf0e5fef83df20b0.jpg" alt="" width="34" height="34" />
+                                </a>
+
+                            </div>
+                            <!-- END .post-thumb -->
+
+                        <!-- BEGIN .post-meta -->
+                        <div class="post-meta">
+
+                            <p>
+                                <a class="meta-title" target="_blank" title="python3 和python2 hashlib同样的代码 sha1 结果不一样" href="http://group.jobbole.com/25411/?utm_source=python.jobbole.com&utm_medium=sidebar-group-topic">python3 和python2 hashlib同样的代码...</a><br />
+                                <a href="http://group.jobbole.com/author/crazyrabbit/">疯狂的兔子</a> 发起
+                                                                    • 11 回复
+
+                            </p>
+
+                        </div>
+                        <!-- END .post-meta -->
+
+                        <div class="clear"></div>
+
+
+                            <!-- BEGIN .post-thumb -->
+                            <div class="author-thumb">
+
+                                <a target="_blank" href="http://www.jobbole.com/members/q1620991762" ">
+                                    <img src="http://q.qlogo.cn/qqapp/208656/4289DA3C7753D96603B10AC9C0F5B707/100" alt="" width="34" height="34" />
+                                </a>
+
+                            </div>
+                            <!-- END .post-thumb -->
+
+                        <!-- BEGIN .post-meta -->
+                        <div class="post-meta">
+
+                            <p>
+                                <a class="meta-title" target="_blank" title="python+selenium自动化问题" href="http://group.jobbole.com/29003/?utm_source=python.jobbole.com&utm_medium=sidebar-group-topic">python+selenium自动化问题</a><br />
+                                <a href="http://group.jobbole.com/author/q1620991762/">加瓦</a> 发起
+                                                                    • 3 回复
+
+                            </p>
+
+                        </div>
+                        <!-- END .post-meta -->
+
+                        <div class="clear"></div>
+
+
+                            <!-- BEGIN .post-thumb -->
+                            <div class="author-thumb">
+
+                                <a target="_blank" href="http://www.jobbole.com/members/heisapirate123" ">
+                                    <img src="http://tp1.sinaimg.cn/1675920195/180/0/1" alt="" width="34" height="34" />
+                                </a>
+
+                            </div>
+                            <!-- END .post-thumb -->
+
+                        <!-- BEGIN .post-meta -->
+                        <div class="post-meta">
+
+                            <p>
+                                <a class="meta-title" target="_blank" title="想找些python爬虫兼职项目练手" href="http://group.jobbole.com/28650/?utm_source=python.jobbole.com&utm_medium=sidebar-group-topic">想找些python爬虫兼职项目练手</a><br />
+                                <a href="http://group.jobbole.com/author/heisapirate123/">嗅觉</a> 发起
+                                                                    • 8 回复
+
+                            </p>
+
+                        </div>
+                        <!-- END .post-meta -->
+
+                        <div class="clear"></div>
+
+
+                </div>
+                <!-- END .grid-4 -->
+
+
+            <div class="clear"></div>
+
+        </div>
+        <!-- END .container -->
+
+        <div class="tabs tabbed_widget"><ul class="nav clearfix"><li><a id="link-tab1" href="#tab1" title="本周热门Python文章">本周热门Python文章</a></li><li><a id="link-tab2" href="#tab2" title="本月热门">本月热门</a></li><li><a id="link-tab3" href="#tab3" title="热门标签">热门标签</a></li></ul><div id="tab1" class="tab"><div class="floated-thumb">
+
+                    <!-- BEGIN .post-meta -->
+                    <div class="post-meta  no-thumb">
+
+                        <p>
+                            <span class="numb">0</span>
+                            <a class="meta-title" target="_blank" href="http://python.jobbole.com/87814/" title="Python + Django 如何支撑了 7 亿月活用户的 Instagram？">Python + Django 如何支撑了 7 亿月活...</a><br />
+                        </p>
+
+                    </div>
+                    <!-- END .post-meta -->
+
+                    <div class="clear"></div>
+
+
+
+                    <!-- BEGIN .post-meta -->
+                    <div class="post-meta  no-thumb">
+
+                        <p>
+                            <span class="numb">1</span>
+                            <a class="meta-title" target="_blank" href="http://python.jobbole.com/87820/" title="超详细的 Python 实现新浪微博模拟登陆（小白都能懂）">超详细的 Python 实现新浪微博模...</a><br />
+                        </p>
+
+                    </div>
+                    <!-- END .post-meta -->
+
+                    <div class="clear"></div>
+
+
+
+                    <!-- BEGIN .post-meta -->
+                    <div class="post-meta  no-thumb">
+
+                        <p>
+                            <span class="numb">2</span>
+                            <a class="meta-title" target="_blank" href="http://python.jobbole.com/87823/" title="如何构建一个分布式爬虫：理论篇">如何构建一个分布式爬虫：理论篇</a><br />
+                        </p>
+
+                    </div>
+                    <!-- END .post-meta -->
+
+                    <div class="clear"></div>
+
+
+
+                    <!-- BEGIN .post-meta -->
+                    <div class="post-meta  no-thumb">
+
+                        <p>
+                            <span class="numb">3</span>
+                            <a class="meta-title" target="_blank" href="http://python.jobbole.com/87826/" title="如何构建一个分布式爬虫：基础篇">如何构建一个分布式爬虫：基础篇</a><br />
+                        </p>
+
+                    </div>
+                    <!-- END .post-meta -->
+
+                    <div class="clear"></div>
+
+                </div></div><div id="tab2" class="tab"><div class="floated-thumb">
+
+                    <!-- BEGIN .post-meta -->
+                    <div class="post-meta  no-thumb">
+
+                        <p>
+                            <span class="numb">0</span>
+                            <a class="meta-title" target="_blank" href="http://python.jobbole.com/87814/" title="Python + Django 如何支撑了 7 亿月活用户的 Instagram？">Python + Django 如何支撑了 7 亿月活...</a><br />
+                        </p>
+
+                    </div>
+                    <!-- END .post-meta -->
+
+                    <div class="clear"></div>
+
+
+
+                    <!-- BEGIN .post-meta -->
+                    <div class="post-meta  no-thumb">
+
+                        <p>
+                            <span class="numb">1</span>
+                            <a class="meta-title" target="_blank" href="http://python.jobbole.com/87688/" title="你该学习 Python 的 7 个理由">你该学习 Python 的 7 个理由</a><br />
+                        </p>
+
+                    </div>
+                    <!-- END .post-meta -->
+
+                    <div class="clear"></div>
+
+
+
+                    <!-- BEGIN .post-meta -->
+                    <div class="post-meta  no-thumb">
+
+                        <p>
+                            <span class="numb">2</span>
+                            <a class="meta-title" target="_blank" href="http://python.jobbole.com/87702/" title="Python爬虫之BeautifulSoup">Python爬虫之BeautifulSoup</a><br />
+                        </p>
+
+                    </div>
+                    <!-- END .post-meta -->
+
+                    <div class="clear"></div>
+
+
+
+                    <!-- BEGIN .post-meta -->
+                    <div class="post-meta  no-thumb">
+
+                        <p>
+                            <span class="numb">3</span>
+                            <a class="meta-title" target="_blank" href="http://python.jobbole.com/87733/" title="用Python浅析股票数据">用Python浅析股票数据</a><br />
+                        </p>
+
+                    </div>
+                    <!-- END .post-meta -->
+
+                    <div class="clear"></div>
+
+
+
+                    <!-- BEGIN .post-meta -->
+                    <div class="post-meta  no-thumb">
+
+                        <p>
+                            <span class="numb">4</span>
+                            <a class="meta-title" target="_blank" href="http://python.jobbole.com/87691/" title="教你搭建一个好看的 Jupyter 环境">教你搭建一个好看的 Jupyter 环境</a><br />
+                        </p>
+
+                    </div>
+                    <!-- END .post-meta -->
+
+                    <div class="clear"></div>
+
+
+
+                    <!-- BEGIN .post-meta -->
+                    <div class="post-meta  no-thumb">
+
+                        <p>
+                            <span class="numb">5</span>
+                            <a class="meta-title" target="_blank" href="http://python.jobbole.com/87797/" title="用 Python 写一个 NoSQL 数据库">用 Python 写一个 NoSQL 数...</a><br />
+                        </p>
+
+                    </div>
+                    <!-- END .post-meta -->
+
+                    <div class="clear"></div>
+
+
+
+                    <!-- BEGIN .post-meta -->
+                    <div class="post-meta  no-thumb">
+
+                        <p>
+                            <span class="numb">6</span>
+                            <a class="meta-title" target="_blank" href="http://python.jobbole.com/87772/" title="Python多线程鸡年不鸡肋">Python多线程鸡年不鸡肋</a><br />
+                        </p>
+
+                    </div>
+                    <!-- END .post-meta -->
+
+                    <div class="clear"></div>
+
+
+
+                    <!-- BEGIN .post-meta -->
+                    <div class="post-meta  no-thumb">
+
+                        <p>
+                            <span class="numb">7</span>
+                            <a class="meta-title" target="_blank" href="http://python.jobbole.com/87805/" title="完全理解 Python 迭代对象、迭代器、生成器">完全理解 Python 迭代对象、迭代...</a><br />
+                        </p>
+
+                    </div>
+                    <!-- END .post-meta -->
+
+                    <div class="clear"></div>
+
+
+
+                    <!-- BEGIN .post-meta -->
+                    <div class="post-meta  no-thumb">
+
+                        <p>
+                            <span class="numb">8</span>
+                            <a class="meta-title" target="_blank" href="http://python.jobbole.com/87698/" title="Python: 函数与方法的区别 以及 Bound Method 和 Unbound Method">Python: 函数与方法的区别 以及 Bound Met...</a><br />
+                        </p>
+
+                    </div>
+                    <!-- END .post-meta -->
+
+                    <div class="clear"></div>
+
+
+
+                    <!-- BEGIN .post-meta -->
+                    <div class="post-meta  no-thumb">
+
+                        <p>
+                            <span class="numb">9</span>
+                            <a class="meta-title" target="_blank" href="http://python.jobbole.com/87743/" title="深入理解 GIL：如何写出高性能及线程安全的 Python 代码">深入理解 GIL：如何写出高性能及线程...</a><br />
+                        </p>
+
+                    </div>
+                    <!-- END .post-meta -->
+
+                    <div class="clear"></div>
+
+                </div></div><div id="tab3" class="tab"><p><a href='http://python.jobbole.com/tag/anaconda/' class='tag-link-1230 tag-link-position-1' title='4个话题' style='font-size: 8px;'>anaconda</a>
+<a href='http://python.jobbole.com/tag/api/' class='tag-link-1197 tag-link-position-2' title='5个话题' style='font-size: 8.6222222222222px;'>API</a>
+<a href='http://python.jobbole.com/tag/beautifulsoup/' class='tag-link-1153 tag-link-position-3' title='4个话题' style='font-size: 8px;'>beautifulsoup</a>
+<a href='http://python.jobbole.com/tag/celery/' class='tag-link-846 tag-link-position-4' title='6个话题' style='font-size: 9.1666666666667px;'>Celery</a>
+<a href='http://python.jobbole.com/tag/class/' class='tag-link-815 tag-link-position-5' title='4个话题' style='font-size: 8px;'>class</a>
+<a href='http://python.jobbole.com/tag/django/' class='tag-link-674 tag-link-position-6' title='30个话题' style='font-size: 14.144444444444px;'>Django</a>
+<a href='http://python.jobbole.com/tag/featuredpost/' class='tag-link-666 tag-link-position-7' title='5个话题' style='font-size: 8.6222222222222px;'>featuredpost</a>
+<a href='http://python.jobbole.com/tag/flask/' class='tag-link-695 tag-link-position-8' title='65个话题' style='font-size: 16.711111111111px;'>Flask</a>
+<a href='http://python.jobbole.com/tag/gdb/' class='tag-link-877 tag-link-position-9' title='6个话题' style='font-size: 9.1666666666667px;'>GDB</a>
+<a href='http://python.jobbole.com/tag/gevent/' class='tag-link-1085 tag-link-position-10' title='5个话题' style='font-size: 8.6222222222222px;'>gevent</a>
+<a href='http://python.jobbole.com/tag/import/' class='tag-link-906 tag-link-position-11' title='4个话题' style='font-size: 8px;'>import</a>
+<a href='http://python.jobbole.com/tag/itertools/' class='tag-link-1052 tag-link-position-12' title='4个话题' style='font-size: 8px;'>itertools</a>
+<a href='http://python.jobbole.com/tag/linux/' class='tag-link-684 tag-link-position-13' title='5个话题' style='font-size: 8.6222222222222px;'>Linux</a>
+<a href='http://python.jobbole.com/tag/logging/' class='tag-link-799 tag-link-position-14' title='6个话题' style='font-size: 9.1666666666667px;'>logging</a>
+<a href='http://python.jobbole.com/tag/matplotlib/' class='tag-link-735 tag-link-position-15' title='6个话题' style='font-size: 9.1666666666667px;'>matplotlib</a>
+<a href='http://python.jobbole.com/tag/mock/' class='tag-link-991 tag-link-position-16' title='4个话题' style='font-size: 8px;'>mock</a>
+<a href='http://python.jobbole.com/tag/mongodb/' class='tag-link-753 tag-link-position-17' title='10个话题' style='font-size: 10.644444444444px;'>MongoDB</a>
+<a href='http://python.jobbole.com/tag/mysql/' class='tag-link-722 tag-link-position-18' title='8个话题' style='font-size: 9.9444444444444px;'>MySQL</a>
+<a href='http://python.jobbole.com/tag/nginx/' class='tag-link-1081 tag-link-position-19' title='7个话题' style='font-size: 9.5555555555556px;'>Nginx</a>
+<a href='http://python.jobbole.com/tag/numpy/' class='tag-link-757 tag-link-position-20' title='4个话题' style='font-size: 8px;'>NumPy</a>
+<a href='http://python.jobbole.com/tag/opencv/' class='tag-link-681 tag-link-position-21' title='26个话题' style='font-size: 13.677777777778px;'>OpenCV</a>
+<a href='http://python.jobbole.com/tag/orm/' class='tag-link-1024 tag-link-position-22' title='5个话题' style='font-size: 8.6222222222222px;'>ORM</a>
+<a href='http://python.jobbole.com/tag/pandas/' class='tag-link-685 tag-link-position-23' title='9个话题' style='font-size: 10.333333333333px;'>Pandas</a>
+<a href='http://python.jobbole.com/tag/pyenv/' class='tag-link-1128 tag-link-position-24' title='4个话题' style='font-size: 8px;'>pyenv</a>
+<a href='http://python.jobbole.com/tag/pygame/' class='tag-link-851 tag-link-position-25' title='40个话题' style='font-size: 15.077777777778px;'>pyGame</a>
+<a href='http://python.jobbole.com/tag/pyspider/' class='tag-link-721 tag-link-position-26' title='5个话题' style='font-size: 8.6222222222222px;'>Pyspider</a>
+<a href='http://python.jobbole.com/tag/python/' class='tag-link-663 tag-link-position-27' title='314个话题' style='font-size: 22px;'>Python</a>
+<a href='http://python.jobbole.com/tag/python%e6%ba%90%e7%a0%81/' class='tag-link-931 tag-link-position-28' title='6个话题' style='font-size: 9.1666666666667px;'>python源码</a>
+<a href='http://python.jobbole.com/tag/r/' class='tag-link-1165 tag-link-position-29' title='6个话题' style='font-size: 9.1666666666667px;'>R</a>
+<a href='http://python.jobbole.com/tag/restful/' class='tag-link-1057 tag-link-position-30' title='7个话题' style='font-size: 9.5555555555556px;'>restful</a>
+<a href='http://python.jobbole.com/tag/scrapy/' class='tag-link-752 tag-link-position-31' title='22个话题' style='font-size: 13.133333333333px;'>Scrapy</a>
+<a href='http://python.jobbole.com/tag/setuptools/' class='tag-link-1130 tag-link-position-32' title='5个话题' style='font-size: 8.6222222222222px;'>setuptools</a>
+<a href='http://python.jobbole.com/tag/socket/' class='tag-link-820 tag-link-position-33' title='9个话题' style='font-size: 10.333333333333px;'>Socket</a>
+<a href='http://python.jobbole.com/tag/spark/' class='tag-link-875 tag-link-position-34' title='4个话题' style='font-size: 8px;'>Spark</a>
+<a href='http://python.jobbole.com/tag/sqlalchemy/' class='tag-link-893 tag-link-position-35' title='9个话题' style='font-size: 10.333333333333px;'>SQLAlchemy</a>
+<a href='http://python.jobbole.com/tag/tornado/' class='tag-link-867 tag-link-position-36' title='17个话题' style='font-size: 12.355555555556px;'>Tornado</a>
+<a href='http://python.jobbole.com/tag/vim/' class='tag-link-1040 tag-link-position-37' title='5个话题' style='font-size: 8.6222222222222px;'>Vim</a>
+<a href='http://python.jobbole.com/tag/virtualenv/' class='tag-link-1249 tag-link-position-38' title='8个话题' style='font-size: 9.9444444444444px;'>virtualenv</a>
+<a href='http://python.jobbole.com/tag/web/' class='tag-link-1095 tag-link-position-39' title='7个话题' style='font-size: 9.5555555555556px;'>web</a>
+<a href='http://python.jobbole.com/tag/web-py/' class='tag-link-980 tag-link-position-40' title='4个话题' style='font-size: 8px;'>web.py</a>
+<a href='http://python.jobbole.com/tag/web%e6%9c%8d%e5%8a%a1%e5%99%a8/' class='tag-link-800 tag-link-position-41' title='5个话题' style='font-size: 8.6222222222222px;'>Web服务器</a>
+<a href='http://python.jobbole.com/tag/werkzeug/' class='tag-link-1149 tag-link-position-42' title='4个话题' style='font-size: 8px;'>werkzeug</a>
+<a href='http://python.jobbole.com/tag/wsgi/' class='tag-link-1077 tag-link-position-43' title='7个话题' style='font-size: 9.5555555555556px;'>WSGI</a>
+<a href='http://python.jobbole.com/tag/xml/' class='tag-link-921 tag-link-position-44' title='4个话题' style='font-size: 8px;'>XML</a>
+<a href='http://python.jobbole.com/tag/%e4%bd%9c%e7%94%a8%e5%9f%9f/' class='tag-link-747 tag-link-position-45' title='4个话题' style='font-size: 8px;'>作用域</a>
+<a href='http://python.jobbole.com/tag/%e5%85%83%e7%b1%bb/' class='tag-link-1194 tag-link-position-46' title='5个话题' style='font-size: 8.6222222222222px;'>元类</a>
+<a href='http://python.jobbole.com/tag/%e5%85%83%e7%bc%96%e7%a8%8b/' class='tag-link-1302 tag-link-position-47' title='4个话题' style='font-size: 8px;'>元编程</a>
+<a href='http://python.jobbole.com/tag/%e5%87%bd%e6%95%b0/' class='tag-link-741 tag-link-position-48' title='7个话题' style='font-size: 9.5555555555556px;'>函数</a>
+<a href='http://python.jobbole.com/tag/%e5%87%bd%e6%95%b0%e5%bc%8f%e7%bc%96%e7%a8%8b/' class='tag-link-711 tag-link-position-49' title='12个话题' style='font-size: 11.188888888889px;'>函数式编程</a>
+<a href='http://python.jobbole.com/tag/%e5%88%97%e8%a1%a8/' class='tag-link-900 tag-link-position-50' title='5个话题' style='font-size: 8.6222222222222px;'>列表</a>
+<a href='http://python.jobbole.com/tag/%e5%8c%85/' class='tag-link-740 tag-link-position-51' title='4个话题' style='font-size: 8px;'>包</a>
+<a href='http://python.jobbole.com/tag/%e5%8d%8f%e7%a8%8b/' class='tag-link-1043 tag-link-position-52' title='12个话题' style='font-size: 11.188888888889px;'>协程</a>
+<a href='http://python.jobbole.com/tag/%e5%9b%be%e5%83%8f%e5%a4%84%e7%90%86/' class='tag-link-1191 tag-link-position-53' title='12个话题' style='font-size: 11.188888888889px;'>图像处理</a>
+<a href='http://python.jobbole.com/tag/%e5%9e%83%e5%9c%be%e5%9b%9e%e6%94%b6/' class='tag-link-864 tag-link-position-54' title='5个话题' style='font-size: 8.6222222222222px;'>垃圾回收</a>
+<a href='http://python.jobbole.com/tag/%e5%a4%9a%e7%ba%bf%e7%a8%8b/' class='tag-link-1090 tag-link-position-55' title='13个话题' style='font-size: 11.5px;'>多线程</a>
+<a href='http://python.jobbole.com/tag/%e5%a4%9a%e8%bf%9b%e7%a8%8b/' class='tag-link-667 tag-link-position-56' title='12个话题' style='font-size: 11.188888888889px;'>多进程</a>
+<a href='http://python.jobbole.com/tag/%e5%ad%97%e5%85%b8/' class='tag-link-1206 tag-link-position-57' title='4个话题' style='font-size: 8px;'>字典</a>
+<a href='http://python.jobbole.com/tag/%e5%ad%97%e7%ac%a6%e4%b8%b2/' class='tag-link-882 tag-link-position-58' title='8个话题' style='font-size: 9.9444444444444px;'>字符串</a>
+<a href='http://python.jobbole.com/tag/%e5%ad%97%e7%ac%a6%e7%bc%96%e7%a0%81/' class='tag-link-868 tag-link-position-59' title='4个话题' style='font-size: 8px;'>字符编码</a>
+<a href='http://python.jobbole.com/tag/%e5%ae%89%e5%85%a8/' class='tag-link-917 tag-link-position-60' title='4个话题' style='font-size: 8px;'>安全</a>
+<a href='http://python.jobbole.com/tag/%e5%af%b9%e8%b1%a1/' class='tag-link-720 tag-link-position-61' title='4个话题' style='font-size: 8px;'>对象</a>
+<a href='http://python.jobbole.com/tag/%e5%b9%b6%e5%8f%91/' class='tag-link-699 tag-link-position-62' title='6个话题' style='font-size: 9.1666666666667px;'>并发</a>
+<a href='http://python.jobbole.com/tag/%e5%b9%b6%e8%a1%8c/' class='tag-link-746 tag-link-position-63' title='12个话题' style='font-size: 11.188888888889px;'>并行</a>
+<a href='http://python.jobbole.com/tag/%e5%bc%82%e6%ad%a5/' class='tag-link-1003 tag-link-position-64' title='13个话题' style='font-size: 11.5px;'>异步</a>
+<a href='http://python.jobbole.com/tag/%e5%be%ae%e4%bf%a1/' class='tag-link-1016 tag-link-position-65' title='5个话题' style='font-size: 8.6222222222222px;'>微信</a>
+<a href='http://python.jobbole.com/tag/%e6%80%a7%e8%83%bd/' class='tag-link-706 tag-link-position-66' title='5个话题' style='font-size: 8.6222222222222px;'>性能</a>
+<a href='http://python.jobbole.com/tag/%e6%80%a7%e8%83%bd%e5%88%86%e6%9e%90/' class='tag-link-1216 tag-link-position-67' title='4个话题' style='font-size: 8px;'>性能分析</a>
+<a href='http://python.jobbole.com/tag/%e6%8f%8f%e8%bf%b0%e7%ac%a6/' class='tag-link-742 tag-link-position-68' title='7个话题' style='font-size: 9.5555555555556px;'>描述符</a>
+<a href='http://python.jobbole.com/tag/%e6%95%99%e7%a8%8b/' class='tag-link-894 tag-link-position-69' title='57个话题' style='font-size: 16.244444444444px;'>教程</a>
+<a href='http://python.jobbole.com/tag/%e6%95%b0%e6%8d%ae%e5%88%86%e6%9e%90/' class='tag-link-700 tag-link-position-70' title='9个话题' style='font-size: 10.333333333333px;'>数据分析</a>
+<a href='http://python.jobbole.com/tag/%e6%95%b0%e6%8d%ae%e5%8f%af%e8%a7%86%e5%8c%96/' class='tag-link-723 tag-link-position-71' title='8个话题' style='font-size: 9.9444444444444px;'>数据可视化</a>
+<a href='http://python.jobbole.com/tag/%e6%95%b0%e6%8d%ae%e5%a4%84%e7%90%86/' class='tag-link-1290 tag-link-position-72' title='4个话题' style='font-size: 8px;'>数据处理</a>
+<a href='http://python.jobbole.com/tag/%e6%95%b0%e6%8d%ae%e5%ba%93/' class='tag-link-1008 tag-link-position-73' title='4个话题' style='font-size: 8px;'>数据库</a>
+<a href='http://python.jobbole.com/tag/%e6%95%b0%e6%8d%ae%e6%8c%96%e6%8e%98/' class='tag-link-732 tag-link-position-74' title='6个话题' style='font-size: 9.1666666666667px;'>数据挖掘</a>
+<a href='http://python.jobbole.com/tag/%e6%95%b0%e6%8d%ae%e7%a7%91%e5%ad%a6/' class='tag-link-680 tag-link-position-75' title='8个话题' style='font-size: 9.9444444444444px;'>数据科学</a>
+<a href='http://python.jobbole.com/tag/%e6%95%b0%e6%8d%ae%e7%bb%93%e6%9e%84/' class='tag-link-1228 tag-link-position-76' title='5个话题' style='font-size: 8.6222222222222px;'>数据结构</a>
+<a href='http://python.jobbole.com/tag/%e6%95%b0%e6%8d%ae%e7%bb%93%e6%9e%84%e4%b8%8e%e7%ae%97%e6%b3%95/' class='tag-link-1237 tag-link-position-77' title='10个话题' style='font-size: 10.644444444444px;'>数据结构与算法</a>
+<a href='http://python.jobbole.com/tag/machinelearning/' class='tag-link-703 tag-link-position-78' title='32个话题' style='font-size: 14.377777777778px;'>机器学习</a>
+<a href='http://python.jobbole.com/tag/%e6%a0%87%e5%87%86%e5%ba%93/' class='tag-link-1053 tag-link-position-79' title='4个话题' style='font-size: 8px;'>标准库</a>
+<a href='http://python.jobbole.com/tag/%e6%a0%91%e5%bd%a2%e7%bb%93%e6%9e%84/' class='tag-link-1245 tag-link-position-80' title='6个话题' style='font-size: 9.1666666666667px;'>树形结构</a>
+<a href='http://python.jobbole.com/tag/%e6%a8%a1%e5%9d%97/' class='tag-link-739 tag-link-position-81' title='4个话题' style='font-size: 8px;'>模块</a>
+<a href='http://python.jobbole.com/tag/%e6%a8%a1%e6%9d%bf%e5%bc%95%e6%93%8e/' class='tag-link-1014 tag-link-position-82' title='4个话题' style='font-size: 8px;'>模板引擎</a>
+<a href='http://python.jobbole.com/tag/%e6%ad%a3%e5%88%99%e8%a1%a8%e8%be%be%e5%bc%8f/' class='tag-link-1219 tag-link-position-83' title='7个话题' style='font-size: 9.5555555555556px;'>正则表达式</a>
+<a href='http://python.jobbole.com/tag/%e6%b8%b8%e6%88%8f%e7%bc%96%e7%a8%8b/' class='tag-link-1308 tag-link-position-84' title='9个话题' style='font-size: 10.333333333333px;'>游戏编程</a>
+<a href='http://python.jobbole.com/tag/%e7%88%ac%e8%99%ab/' class='tag-link-714 tag-link-position-85' title='86个话题' style='font-size: 17.644444444444px;'>爬虫</a>
+<a href='http://python.jobbole.com/tag/%e7%94%9f%e6%88%90%e5%99%a8/' class='tag-link-837 tag-link-position-86' title='12个话题' style='font-size: 11.188888888889px;'>生成器</a>
+<a href='http://python.jobbole.com/tag/%e7%a5%9e%e7%bb%8f%e7%bd%91%e7%bb%9c/' class='tag-link-749 tag-link-position-87' title='7个话题' style='font-size: 9.5555555555556px;'>神经网络</a>
+<a href='http://python.jobbole.com/tag/%e7%ae%97%e6%b3%95/' class='tag-link-772 tag-link-position-88' title='14个话题' style='font-size: 11.733333333333px;'>算法</a>
+<a href='http://python.jobbole.com/tag/%e7%b1%bb/' class='tag-link-719 tag-link-position-89' title='7个话题' style='font-size: 9.5555555555556px;'>类</a>
+<a href='http://python.jobbole.com/tag/%e7%ba%bf%e7%a8%8b/' class='tag-link-698 tag-link-position-90' title='4个话题' style='font-size: 8px;'>线程</a>
+<a href='http://python.jobbole.com/tag/%e7%bc%96%e7%a0%81/' class='tag-link-673 tag-link-position-91' title='10个话题' style='font-size: 10.644444444444px;'>编码</a>
+<a href='http://python.jobbole.com/tag/%e7%bd%91%e9%a1%b5%e7%88%ac%e8%99%ab/' class='tag-link-729 tag-link-position-92' title='7个话题' style='font-size: 9.5555555555556px;'>网页爬虫</a>
+<a href='http://python.jobbole.com/tag/%e8%a3%85%e9%a5%b0%e5%99%a8/' class='tag-link-718 tag-link-position-93' title='24个话题' style='font-size: 13.444444444444px;'>装饰器</a>
+<a href='http://python.jobbole.com/tag/%e8%a7%a3%e9%87%8a%e5%99%a8/' class='tag-link-710 tag-link-position-94' title='7个话题' style='font-size: 9.5555555555556px;'>解释器</a>
+<a href='http://python.jobbole.com/tag/%e8%b4%9d%e5%8f%b6%e6%96%af/' class='tag-link-825 tag-link-position-95' title='7个话题' style='font-size: 9.5555555555556px;'>贝叶斯</a>
+<a href='http://python.jobbole.com/tag/%e8%bf%ad%e4%bb%a3%e5%99%a8/' class='tag-link-836 tag-link-position-96' title='12个话题' style='font-size: 11.188888888889px;'>迭代器</a>
+<a href='http://python.jobbole.com/tag/%e9%97%ad%e5%8c%85/' class='tag-link-885 tag-link-position-97' title='8个话题' style='font-size: 9.9444444444444px;'>闭包</a>
+<a href='http://python.jobbole.com/tag/%e9%98%9f%e5%88%97/' class='tag-link-1229 tag-link-position-98' title='4个话题' style='font-size: 8px;'>队列</a>
+<a href='http://python.jobbole.com/tag/%e9%9d%a2%e5%90%91%e5%af%b9%e8%b1%a1/' class='tag-link-861 tag-link-position-99' title='6个话题' style='font-size: 9.1666666666667px;'>面向对象</a>
+<a href='http://python.jobbole.com/tag/%e9%9d%a2%e8%af%95/' class='tag-link-1037 tag-link-position-100' title='6个话题' style='font-size: 9.1666666666667px;'>面试</a></p></div></div><div id="text-11" class="widget widget_text">			<div class="textwidget"><p><a href="http://blog.jobbole.com/106093/" target="_blank"><img src="http://ww2.sinaimg.cn/mw690/bfdcef89gw1f9cf776pjmj208c03c3yt.jpg" /></a></p>
+</div>
+		</div>            <h3 class="widget-title">
+                <a href="http://hao.jobbole.com?catid=144&utm_source=python.jobbole.com&utm_medium=sidebar-resources-more" target="_blank">Python工具资源</a>
+                <span style="float:right;"><a target="_blank" href="http://hao.jobbole.com?catid=144&utm_source=python.jobbole.com&utm_medium=sidebar-resources-more">更多资源 &raquo;</a></span>
+            </h3>
+            <div class="container">
+                <div class="grid-4">
+
+                    <div class="floated-thumb">
+                        <div class="post-thumb">
+                            <a target="_blank" href="http://hao.jobbole.com/tryton/?utm_source=python.jobbole.com&utm_medium=sidebar-resources" title="Tryton：一个通用商务框架"><img src="http://jbcdn1.b0.upaiyun.com/2017/01/fbce31ffc19ced1422abbb0a860c5ab7.png" alt="" width="50" height="50" /></a>
+                        </div>
+                        <div class="post-meta">
+                            <p>
+                                <a class="meta-title" target="_blank" href="http://hao.jobbole.com/tryton/?utm_source=python.jobbole.com&utm_medium=sidebar-resources" title="Tryton：一个通用商务框架">Tryton：一个通用商务框架</a><br />
+                                <a href="http://hao.jobbole.com/category/python-tools/python-misc/" rel="category tag">杂项</a>
+                            </p>
+                        </div>
+                        <div class="clear"></div>
+                    </div>
+
+                    <div class="floated-thumb">
+                        <div class="post-thumb">
+                            <a target="_blank" href="http://hao.jobbole.com/nltk/?utm_source=python.jobbole.com&utm_medium=sidebar-resources" title="NLTK：一个先进的用来处理自然语言数据的Python程序。"><img src="http://jbcdn1.b0.upaiyun.com/2016/12/0384e39ce19622237039c4a86febccc9.png" alt="" width="50" height="50" /></a>
+                        </div>
+                        <div class="post-meta">
+                            <p>
+                                <a class="meta-title" target="_blank" href="http://hao.jobbole.com/nltk/?utm_source=python.jobbole.com&utm_medium=sidebar-resources" title="NLTK：一个先进的用来处理自然语言数据的Python程序。">NLTK：一个先进的用来处理自然语言数据的Python程序。</a><br />
+                                <a href="http://hao.jobbole.com/category/python-tools/python-natural-lang/" rel="category tag">自然语言处理</a> &middot; <a target='_blank' href='http://hao.jobbole.com/nltk/#comments'><i class='fa fa-comments-o'></i> 2</a>
+                            </p>
+                        </div>
+                        <div class="clear"></div>
+                    </div>
+
+                    <div class="floated-thumb">
+                        <div class="post-thumb">
+                            <a target="_blank" href="http://hao.jobbole.com/pymc/?utm_source=python.jobbole.com&utm_medium=sidebar-resources" title="PyMC：马尔科夫链蒙特卡洛采样工具"><img src="http://jbcdn1.b0.upaiyun.com/2016/12/bf6677dba678925802f3f1e76ec760c3.png" alt="" width="50" height="50" /></a>
+                        </div>
+                        <div class="post-meta">
+                            <p>
+                                <a class="meta-title" target="_blank" href="http://hao.jobbole.com/pymc/?utm_source=python.jobbole.com&utm_medium=sidebar-resources" title="PyMC：马尔科夫链蒙特卡洛采样工具">PyMC：马尔科夫链蒙特卡洛采样工具</a><br />
+                                <a href="http://hao.jobbole.com/category/python-tools/python-science-data-analysis/" rel="category tag">科学计算与分析</a>
+                            </p>
+                        </div>
+                        <div class="clear"></div>
+                    </div>
+
+                    <div class="floated-thumb">
+                        <div class="post-thumb">
+                            <a target="_blank" href="http://hao.jobbole.com/statsmodels/?utm_source=python.jobbole.com&utm_medium=sidebar-resources" title="statsmodels：统计建模和计量经济学"><img src="http://jbcdn1.b0.upaiyun.com/2016/12/e88a9784e92acb81d2f3c8331493e004.png" alt="" width="50" height="50" /></a>
+                        </div>
+                        <div class="post-meta">
+                            <p>
+                                <a class="meta-title" target="_blank" href="http://hao.jobbole.com/statsmodels/?utm_source=python.jobbole.com&utm_medium=sidebar-resources" title="statsmodels：统计建模和计量经济学">statsmodels：统计建模和计量经济学</a><br />
+                                <a href="http://hao.jobbole.com/category/python-tools/python-science-data-analysis/" rel="category tag">科学计算与分析</a>
+                            </p>
+                        </div>
+                        <div class="clear"></div>
+                    </div>
+
+                    <div class="floated-thumb">
+                        <div class="post-thumb">
+                            <a target="_blank" href="http://hao.jobbole.com/pylearn2/?utm_source=python.jobbole.com&utm_medium=sidebar-resources" title="Pylearn2：一个基于Theano的机器学习库"><img src="http://jbcdn1.b0.upaiyun.com/2016/12/660abdb1c0391cfc738b3266106119c9.png" alt="" width="50" height="50" /></a>
+                        </div>
+                        <div class="post-meta">
+                            <p>
+                                <a class="meta-title" target="_blank" href="http://hao.jobbole.com/pylearn2/?utm_source=python.jobbole.com&utm_medium=sidebar-resources" title="Pylearn2：一个基于Theano的机器学习库">Pylearn2：一个基于Theano的机器学习库</a><br />
+                                <a href="http://hao.jobbole.com/category/python-tools/python-machine-learning/" rel="category tag">机器学习</a> &middot; <a target='_blank' href='http://hao.jobbole.com/pylearn2/#comments'><i class='fa fa-comments-o'></i> 1</a>
+                            </p>
+                        </div>
+                        <div class="clear"></div>
+                    </div>
+                                </div>
+            </div>
+        <div id="text-12" class="widget widget_text">			<div class="textwidget"><p><a href="http://blog.jobbole.com/84342/" target="_blank"><img src="http://jbcdn2.b0.upaiyun.com/2016/08/74d126ea14f964e13bb07d24843bdab4.jpg" /></a></p>
+</div>
+		</div>
+	<!-- BEGIN .container -->
+	<div class="container">
+
+		<!-- BEGIN .grid-2 -->
+		<div class="grid-2">
+
+
+		</div>
+		<!-- END .grid-2 -->
+
+		<!-- BEGIN .grid-2 -->
+		<div class="grid-2">
+
+
+		</div>
+		<!-- END .grid-2 -->
+
+		<div class="clear"></div>
+
+	</div>
+	<!-- END .container -->
+
+</div>
+<!-- END #sidebar -->
+<div class="clear"></div>
+
+
+</div>
+<!-- END #wrapper -->
+
+<!-- BEGIN footer -->
+
+    <footer>
+
+        <!-- BEGIN .container -->
+        <div class="container">
+
+            <!-- BEGIN .grid-4 -->
+            <div class="grid-4">
+
+                <div id="text-3" class="widget widget_text"><h3 class="widget-title">关于 Python 频道</h3>			<div class="textwidget"><p>Python频道分享 Python 开发技术、相关的行业动态。</p>
+<p><b>快速链接</b><br />
+<a target='_blank' href="http://blog.jobbole.com/87622/">网站使用指南 » </a><br />
+<a target='_blank' href="http://group.jobbole.com/22422/">加入我们 » </a><br />
+<a target='_blank' href="http://group.jobbole.com/category/feedback/thanks">问题反馈与求助 » </a><br />
+<a target='_blank' href="http://group.jobbole.com/158/">网站积分规则 » </a><br />
+<a target='_blank' href="http://group.jobbole.com/175/">网站声望规则 » </a></p>
+</div>
+		</div>
+            </div>
+            <!-- END .grid-4 -->
+
+            <!-- BEGIN .grid-4 -->
+            <div class="grid-4">
+
+                <div id="text-5" class="widget widget_text"><h3 class="widget-title">关注我们</h3>			<div class="textwidget"><p>新浪微博：<a href='http://weibo.com/u/5305630013' target='_blank'>@Python开发者</a><br />
+RSS：<a href='http://python.jobbole.com/feed/' target='_blank'>订阅地址</a><br />
+推荐微信号<br />
+<img src='http://jbcdn2.b0.upaiyun.com/2015/12/weixin/Python_weixin.png' width='100' height='110' /><img src='http://jbcdn2.b0.upaiyun.com/2015/12/weixin/Linux_weixin.png' width='100' height='110' /><img src='http://jbcdn2.b0.upaiyun.com/2015/12/weixin/db_weixin.png' width='100' height='110' /></p>
+<p><strong>合作联系</strong><br />
+Email：<a href='mailto:bd@jobbole.com'>bd@Jobbole.com</a><br />
+QQ： 2302462408  （加好友请注明来意）</p>
+</div>
+		</div>
+            </div>
+            <!-- END .grid-4 -->
+
+            <!-- BEGIN .grid-4 -->
+            <div class="grid-4">
+
+                <div id="text-4" class="widget widget_text"><h3 class="widget-title">更多频道</h3>			<div class="textwidget"><p><a href='http://group.jobbole.com/?utm_source=python.jobbole.com&#038;utm_medium=bottomText' target='_blank'>小组</a> &#8211; 好的话题、有启发的回复、值得信赖的圈子<br />
+<a href='http://top.jobbole.com/?utm_source=python.jobbole.com&#038;utm_medium=bottomText' target='_blank'>头条</a> &#8211; 分享和发现有价值的内容与观点<br />
+<a href='http://date.jobbole.com/?utm_source=python.jobbole.com&#038;utm_medium=bottomText' target='_blank'>相亲</a> &#8211; 为IT单身男女服务的征婚传播平台<br />
+<a href='http://hao.jobbole.com/?utm_source=python.jobbole.com&#038;utm_medium=bottomText' target='_blank'>资源</a> &#8211; 优秀的工具资源导航<br />
+<a href='http://fanyi.jobbole.com/?utm_source=python.jobbole.com&#038;utm_medium=bottomText' target='_blank'>翻译</a> &#8211; 翻译传播优秀的外文文章<br />
+<a href='http://blog.jobbole.com/?utm_source=python.jobbole.com&#038;utm_medium=bottomText' target='_blank'>文章</a> &#8211; 国内外的精选文章<br />
+<a href='http://design.jobbole.com/?utm_source=python.jobbole.com&#038;utm_medium=bottomText' target='_blank'>设计</a> &#8211; UI,网页，交互和用户体验<br />
+<a href='http://ios.jobbole.com/?utm_source=python.jobbole.com&#038;utm_medium=bottomText' target='_blank'>iOS</a> &#8211; 专注iOS技术分享<br />
+<a href='http://android.jobbole.com/?utm_source=python.jobbole.com&#038;utm_medium=bottomText' target='_blank'>安卓</a> &#8211; 专注Android技术分享<br />
+<a href='http://web.jobbole.com/?utm_source=python.jobbole.com&#038;utm_medium=bottomText' target='_blank'>前端</a> &#8211; JavaScript, HTML5, CSS<br />
+<a href='http://www.importnew.com/?utm_source=python.jobbole.com&#038;utm_medium=bottomText' target='_blank'>Java</a> &#8211; 专注Java技术分享<br />
+<a href='http://python.jobbole.com/?utm_source=python.jobbole.com&#038;utm_medium=bottomText' target='_blank'>Python</a> &#8211; 专注Python技术分享</p>
+</div>
+		</div>
+            </div>
+            <!-- END .grid-4 -->
+
+            <div class="clear"></div>
+
+        </div>
+        <!-- END .container -->
+
+        <!-- BEGIN #bottom -->
+        <div id="bottom">
+
+            <!-- BEGIN .container -->
+            <div class="container">
+
+                <!-- BEGIN .grid-12 -->
+                <div class="grid-12">
+
+                    <p>&copy; 2017 伯乐在线
+                    <span style="margin: 0 40px;">
+                        <a href="http://blog.jobbole.com">文章</a>&nbsp;&nbsp;
+                        <a href="http://group.jobbole.com">小组</a>&nbsp;&nbsp;
+                        <a href="http://date.jobbole.com">相亲</a>&nbsp;&nbsp;
+                        <a href="http://group.jobbole.com/22422/">加入我们</a>&nbsp;&nbsp;
+                        <a href="http://group.jobbole.com/category/feedback/thanks/"><i class="fa fa-bullhorn"></i> 反馈</a>
+                    </span>
+                    <a target="_blank" href="http://www.miitbeian.gov.cn/publish/query/indexFirst.action">沪ICP备14046347号-1</a>
+                    </p>
+                </div>
+                <!-- END .grid-12 -->
+
+                <div class="clear"></div>
+
+            </div>
+            <!-- END .container -->
+
+        </div>
+        <!-- END #bottom -->
+    </footer>
+
+
+<!-- END footer -->
+
+
+
+<script type='text/javascript'>
+/* <![CDATA[ */
+var thickboxL10n = {"next":"\u4e0b\u4e00\u9875 >","prev":"< \u4e0a\u4e00\u9875","image":"\u56fe\u50cf","of":"\/","close":"\u5173\u95ed","noiframes":"\u8fd9\u4e2a\u529f\u80fd\u9700\u8981iframe\u7684\u652f\u6301\u3002\u60a8\u53ef\u80fd\u7981\u6b62\u4e86iframe\u7684\u663e\u793a\uff0c\u6216\u60a8\u7684\u6d4f\u89c8\u5668\u4e0d\u652f\u6301\u6b64\u529f\u80fd\u3002","loadingAnimation":"http:\/\/python.jobbole.com\/wp-includes\/js\/thickbox\/loadingAnimation.gif"};
+/* ]]> */
+</script>
+<script type='text/javascript' src='http://python.jobbole.com/wp-includes/js/thickbox/thickbox.js?ver=3.1-20121105'></script>
+<script type='text/javascript' src='http://python.jobbole.com/wp-includes/js/underscore.min.js?ver=1.8.3'></script>
+<script type='text/javascript' src='http://python.jobbole.com/wp-includes/js/shortcode.min.js?ver=4.5.7'></script>
+<script type='text/javascript' src='http://python.jobbole.com/wp-admin/js/media-upload.min.js?ver=4.5.7'></script>
+<script type='text/javascript' src='http://python.jobbole.com/wp-includes/js/comment-reply.min.js?ver=4.5.7'></script>
+<script type='text/javascript'>
+/* <![CDATA[ */
+var quicktagsL10n = {"closeAllOpenTags":"\u5173\u95ed\u6240\u6709\u6253\u5f00\u7684\u6807\u7b7e","closeTags":"\u5173\u95ed\u6807\u7b7e","enterURL":"\u8f93\u5165URL","enterImageURL":"\u8f93\u5165\u56fe\u50cfURL","enterImageDescription":"\u4e3a\u56fe\u50cf\u8f93\u5165\u63cf\u8ff0","textdirection":"\u6587\u672c\u65b9\u5411","toggleTextdirection":"\u5207\u6362\u7f16\u8f91\u5668\u6587\u672c\u4e66\u5199\u65b9\u5411","dfw":"\u514d\u6253\u6270\u5199\u4f5c\u6a21\u5f0f","strong":"\u7c97\u4f53","strongClose":"\u5173\u95ed\u7c97\u4f53\u6807\u7b7e","em":"\u659c\u4f53","emClose":"\u5173\u95ed\u659c\u4f53\u6807\u7b7e","link":"\u63d2\u5165\u94fe\u63a5","blockquote":"\u5757\u5f15\u7528","blockquoteClose":"\u5173\u95ed\u5757\u5f15\u7528\u6807\u7b7e","del":"\u5220\u9664\u7684\u6587\u5b57\uff08\u5220\u9664\u7ebf\uff09","delClose":"\u5173\u95ed\u5220\u9664\u7ebf\u6807\u7b7e","ins":"\u63d2\u5165\u7684\u6587\u5b57","insClose":"\u5173\u95ed\u63d2\u5165\u7684\u6587\u5b57\u6807\u7b7e","image":"\u63d2\u5165\u56fe\u50cf","ul":"\u9879\u76ee\u7b26\u53f7\u5217\u8868","ulClose":"\u5173\u95ed\u9879\u76ee\u7b26\u53f7\u5217\u8868\u6807\u7b7e","ol":"\u7f16\u53f7\u5217\u8868","olClose":"\u5173\u95ed\u7f16\u53f7\u5217\u8868\u6807\u7b7e","li":"\u5217\u8868\u9879\u76ee","liClose":"\u5173\u95ed\u5217\u8868\u9879\u76ee\u6807\u7b7e","code":"\u4ee3\u7801","codeClose":"\u5173\u95ed\u4ee3\u7801\u6807\u7b7e","more":"\u63d2\u5165\u201cMore\u201d\u6807\u7b7e"};
+/* ]]> */
+</script>
+<script type='text/javascript' src='http://python.jobbole.com/wp-includes/js/quicktags.min.js?ver=4.5.7'></script>
+<script type='text/javascript' src='http://python.jobbole.com/wp-content/plugins/crayon-syntax-highlighter/util/tag-editor/crayon_qt.js?ver=2.7.1.1'></script>
+<script type='text/javascript'>
+/* <![CDATA[ */
+var viewsCacheL10n = {"admin_ajax_url":"http:\/\/python.jobbole.com\/wp-admin\/admin-ajax.php","post_id":"87826"};
+/* ]]> */
+</script>
+<script type='text/javascript' src='http://python.jobbole.com/wp-content/plugins/wp-postviews/postviews-cache.js?ver=1.68'></script>
+<script type='text/javascript' src='http://python.jobbole.com/wp-content/themes/jobboleblogv3/_assets/js/ready.js?ver=1.0'></script>
+<script type='text/javascript' src='http://python.jobbole.com/wp-content/themes/jobboleblogv3/_assets/js/easing.js?ver=1.3'></script>
+<script type='text/javascript' src='http://python.jobbole.com/wp-content/themes/jobboleblogv3/_assets/js/validate.js?ver=1.9.0'></script>
+<script type='text/javascript' src='http://python.jobbole.com/wp-content/themes/jobboleblogv3/_assets/js/touchwipe.js?ver=1.1.1'></script>
+<script type='text/javascript' src='http://python.jobbole.com/wp-content/themes/jobboleblogv3/_assets/js/caroufredsel.js?ver=5.5.0'></script>
+<script type='text/javascript' src='http://python.jobbole.com/wp-content/themes/jobboleblogv3/_assets/js/flexslider.js?ver=2.0'></script>
+<script type='text/javascript' src='http://python.jobbole.com/wp-content/themes/jobboleblogv3/_assets/js/jplayer.js?ver=2.1.0'></script>
+<script type='text/javascript' src='http://python.jobbole.com/wp-content/themes/jobboleblogv3/_assets/js/fitvids.js?ver=1.0'></script>
+<script type='text/javascript' src='http://python.jobbole.com/wp-content/themes/jobboleblogv3/_assets/js/selectnav.js?ver=0.11'></script>
+<script type='text/javascript' src='http://python.jobbole.com/wp-content/themes/jobboleblogv3/_assets/js/effects.js?ver=1.11'></script>
+<script type='text/javascript' src='http://python.jobbole.com/wp-includes/js/wp-embed.min.js?ver=4.5.7'></script>
+
+
+<div id="full-btm">
+<a><img src="http://python.jobbole.com/wp-content/themes/jobboleblogv3/_assets/img/back-btm.png" width="20" border=0 alt="跳到底部" title="跳到底部"></a>
+</div>
+
+<script type="text/javascript">
+jQuery('#full-btm').click(function(){
+    jQuery('html, body').animate({scrollTop:jQuery(document).height()}, 'slow');
+    return false;
+});
+</script>
+
+<div id="full-top">
+<a><img src="http://python.jobbole.com/wp-content/themes/jobboleblogv3/_assets/img/back-top.png" width="20" border=0 alt="返回顶部" title="返回顶部"></a>
+</div>
+
+<script type="text/javascript">
+jQuery('#full-top').click(function(){
+    jQuery('html, body').animate({scrollTop:0}, 'slow');
+    return false;
+});
+
+</script>
+
+</body>
+<!-- END body -->
+
+</html>
+<!-- END html -->
