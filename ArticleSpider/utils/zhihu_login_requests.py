@@ -59,8 +59,7 @@ def get_index():
 def get_captcha():
     import time
     # t = str(int(time.time()*1000))
-    captcha_content = session.get('http://www.zhihu.com/captcha.gif?r=%d&type=login' % (time.time() * 1000),
-                                  headers=header).content
+    captcha_content = session.get('http://www.zhihu.com/captcha.gif?r=%d&type=login' % (time.time() * 1000), headers=header).content
 
     # captcha_url = "https://www.zhihu.com/captcha.gif?r={0}type=login.".format(t)
     # t = session.get(captcha_url, headers=header)
