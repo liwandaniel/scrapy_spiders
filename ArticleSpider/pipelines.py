@@ -50,6 +50,7 @@ class JsonExporterPipeline(object):
 
 
 class MysqlPipeline(object):
+    # 采用同步的机制写入mysql
     def __init__(self):
         self.conn = MySQLdb.connect('127.0.0.1', 'root', 'liwan123', 'jobbole_article', charset="utf8", use_unicode=True)
         self.cursor = self.conn.cursor()
@@ -89,19 +90,14 @@ class MysqlTwistedPipeline(object):
 
     def handle_error(self, failure, item, spider):
         # 处理异步插入的异常
-        print (failure)
+        print(failure)
 
     def do_insert(self, cursor, item):
         #执行具体的插入
         #根据不同的item 构建不同的sql语句并插入到mysql中
-        insert_sql = """
-                    insert into jobbole_article(title, url, create_date, url_object_id, praise_nums, comment_nums,
-                    fav_nums, tags)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                """
-        cursor.execute(insert_sql, (item["title"], item["url"], item["create_date"], item["url_object_id"],
-                                    item["praise_nums"], item["comment_nums"], item["fav_nums"],
-                                    item["tags"]))
+        insert_sql, params = item.get_insert_sql()
+        print(insert_sql, params)
+        cursor.execute(insert_sql, params)
 
 
 class ArticleImagePipeline(ImagesPipeline):
