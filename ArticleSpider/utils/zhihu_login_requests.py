@@ -105,7 +105,7 @@ def zhihu_login(account, password):
     response_text = session.post(post_url, data=post_data, headers=header)
     session.cookies.save()
 
-zhihu_login("18267728867", "liwan/.,1993")
+zhihu_login("18267728867", "")
 # get_index()
 is_login()
 # get_captcha()

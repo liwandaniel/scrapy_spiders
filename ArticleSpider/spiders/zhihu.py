@@ -129,7 +129,7 @@ class ZhihuSpider(scrapy.Spider):
             post_data = {
                 "_xsrf": xsrf,
                 "phone_num": "18267728867",
-                "password": "liwan/.,1993",
+                "password": "",
                 "captcha": "",
             }
             import time
