@@ -56,7 +56,7 @@ COOKIES_ENABLED = True
 # See http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
     'scrapy.contrib.downloadermiddleware.useragent.UserAgentMiddleware': None,
-    'ArticleSpider.spiders.rotate_useragent.RotateUserAgentMiddleware': 400,
+    'ArticleSpider.middlewares.RandomUserAgentMiddleware': 400,
 
 }
 
@@ -118,3 +118,5 @@ SQL_DATE_FORMAT = "%Y-%m-%d"
 DOWNLOAD_DELAY = 2
 # REDIRECT_ENABLED = False
 # HTTPERROR_ALLOWED_CODES = 302
+
+RANDOM_UA_TYPE = "random"
