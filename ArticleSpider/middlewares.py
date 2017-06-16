@@ -8,6 +8,8 @@
 from scrapy import signals
 from fake_useragent import UserAgent
 from tools.crawl_xici_ip import GetIp
+from selenium import webdriver
+from scrapy.http import HtmlResponse
 
 
 class ArticlespiderSpiderMiddleware(object):
@@ -80,3 +82,29 @@ class RandomProxyMiddleware(object):
     def process_request(self, request, spider):
         get_ip = GetIp()
         request.meta["proxy"] = get_ip.get_random_ip()
+
+
+class JSPageMiddleware(object):
+    # 通过chrome请求动态网页
+    # def __init__(self):
+    #     self.browser = webdriver.Chrome(executable_path="/home/daniel/scrapy/ArticleSpider/chromedriver")
+    #     super(JSPageMiddleware, self).__init__()
+
+    def process_request(self, request, spider):
+        if spider.name == "jobbole":
+            # browser = webdriver.Chrome(executable_path="/home/daniel/scrapy/ArticleSpider/chromedriver")
+            spider.browser.get(request.url)
+            import time
+            time.sleep(3)
+            print("访问:{0}".format(request.url))
+
+            return HtmlResponse(url=spider.browser.current_url, body=spider.browser.page_source, encoding="utf-8", request=request)
+
+
+# from pyvirtualdisplay import Display
+# display = Display(visible=0, size=(800, 600))
+# display.start()
+# browser = webdriver.Chrome(executable_path="/home/daniel/scrapy/ArticleSpider/chromedriver")
+# browser.get()
+
+
